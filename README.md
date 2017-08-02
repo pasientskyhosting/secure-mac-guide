@@ -126,7 +126,7 @@ section has logging enabled, and the “Yubico Output” selected.
   3. Click Generate to generate a new Secret Key (20 bytes Hex)
   4. Click Write Configuration
 
-![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico-300x250.jpg "YubiKey Personalization Tool")
+![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico.jpg "YubiKey Personalization Tool")
 
 Please note, you can do this with multiple Yubikeys as should you lose it!
 
@@ -218,7 +218,7 @@ Use the screensaver to check both the Yubikeys before you proceed.
 
 Also remember to set the screensaver to require password.
 
-![Mac screensaver](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/screensaver-300x243.jpg "Macbook Screensaver Password")
+![Mac screensaver](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/screensaver.jpg "Macbook Screensaver Password")
 
 # Generating More Secure GPG Keys
 Open a Terminal shell and start generating our new keys.
