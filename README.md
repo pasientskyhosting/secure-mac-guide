@@ -1,6 +1,4 @@
-This is a practical guide to using [YubiKey](https://www.yubico.com/faq/yubikey/) as a SmartCard for storing GPG encryption and signing keys.
-An authentication key can also be created for SSH and used with gpg-agent.
-Keys stored on a smartcard like YubiKey seem more difficult to steal than ones stored on disk, and are convenient for everyday use.
+This is a practical guide to using [YubiKey](https://www.yubico.com/faq/yubikey/) as a SmartCard for storing GPG encryption and signing keys. Keys stored on a smartcard like YubiKey seem more difficult to steal than ones stored on disk, and are convenient for everyday use.
 
 The blog "[Exploring Hard Tokens](https://www.avisi.nl/blog/2012/01/05/exploring-hard-tokens/)" describes the disadvantages of the combination of a username/password for acces control. Passwords can be cracked or retrieved by social engineering. They can be read from faulty systems or even retrieved from unsecured internet access.
 
@@ -57,10 +55,8 @@ We use the Yubikey Neo as it features as a Smartcard and has options for NFC.
 
 You should also buy a regular Yubikey as a backup key for your computer login, because if you lose your Neo, you wont be able to login into your computer.
 
-https://www.dustin.dk/product/5010851791/yubikey-neo
-https://www.dustin.dk/product/5010894443/yubikey-4
-
-Consider purchasing a pair and programming both in case of loss or damage to one of them.
+* https://www.yubico.com/products/yubikey-hardware/yubikey-neo/
+* https://www.yubico.com/products/yubikey-hardware/yubikey4/
 
 # Prepare your Macbook
 Please make sure before you start this proces, that your Macbook has enabled FileVault 2 disk encryption.
@@ -70,6 +66,7 @@ When you have verified your computer has disk encryption enabled, and you use a 
 
 # Install required software
 The required software for this guide is:
+
 * Homebrew
 * PAM Yubico
 * Yubikey personalization tools
@@ -79,24 +76,25 @@ The required software for this guide is:
 Open a Terminal window and then run the following command to install Homebrew:
 
 ```
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
 ## Install GPG
 Open a Terminal window and then run the following commands:
+
 ```
-brew tap homebrew/versions
-brew install gnupg21 pinentry-mac ykneomgr coreutils
+$ brew tap homebrew/versions
+$ brew install gnupg21 pinentry-mac ykneomgr coreutils
 ```
 
 ## Install Yubikey Personalization Tools
-Install the latest version of the YubiKey Personalization Tool from the App Store -
+Install the latest version of the YubiKey Personalization Tool from the App Store
 https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
 
 ## Install PAM Yubico
 Open a Terminal window, and run the following command:
 ```
-brew install yubico-pam
+$ brew install yubico-pam
 ```
 
 # Enable PAM on your Macbook
@@ -113,16 +111,18 @@ Apple icon appears. This will boot your system into Recovery Mode.
 Note: The slower than normal boot time is expected behavior.
 
 Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
+
 ```
-csrutil disable && reboot
+$ csrutil disable && reboot
 ```
 
 ## Copy the PAM Module
 When the computer has rebooted. Open a Terminal window, and run the following command:
+
 ```
-sudo cp /usr/local/Cellar/pam_yubico/2.23/lib/security/pam_yubico.so
-/usr/lib/pam/pam_yubico.so
+$ sudo cp /usr/local/Cellar/pam_yubico/2.23/lib/security/pam_yubico.so /usr/lib/pam/pam_yubico.so
 ```
+
 Note: The version number 2.23 might change by time. Make sure to alter this to copy the file.
 
 ## Enable System Integrity Protection
@@ -131,55 +131,54 @@ Apple icon appears. This will boot your system into Recovery Mode.
 Note: The slower than normal boot time is expected behavior.
 
 Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
+
 ```
-csrutil enable && reboot
+$ csrutil enable && reboot
 ```
 
 # Configure your Yubikey
 Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the YubiKey Neo in a USB port on your Mac.
 
-1. Open the “Settings tab” at the top of the window, and ensure that the “Logging Settings”
+1. Open the "Settings tab at the top of the window, and ensure that the "Logging Settings"
 section has logging enabled, and the “Yubico Output” selected.
 
-2. Open the “Challenge Response” tab at the top of the window.
+2. Open the “Challenge Response” tab at the top of the window. Then configure slot 2:
 
   1. Select Configuration Slot 2
   2. Select Variable input for HMAC-SHA1 Mode
   3. Click Generate to generate a new Secret Key (20 bytes Hex)
-  4. Click Write Configuration
+  4. Make sure it the box is unchecked for "Require user input (button press)"
+  5. Click Write Configuration
 
 ![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico.jpg "YubiKey Personalization Tool")
 
-Please note, you can do this with multiple Yubikeys as should you lose it!
+You must configure both the Yubikey Neo and the Yubikey 4 with the Challenge-Response mode now.
 
-You should configure both the Yubikey Neo and the Yubikey 4 with the Challenge-Response mode!
-
-# Change Yubikey Mode
+## Change Yubikey Mode
 We also need to set the YubiKey mode to OTP/U2F/CCID. Open a Terminal and run the following command:
 
 ```
-ykneomgr --set-mode=6
-ykpersonalize -m82
+$ ykneomgr --set-mode=6
 ```
 
 # Configure PAM on your Macbook
 Open a Terminal window, and run the following command as your regular user, with firstly the Yubikey Neo inserted:
 
 ```
-mkdir –m0700 –p ~/.yubico
-ykpamcfg -2
+$ mkdir –m0700 –p ~/.yubico
+$ ykpamcfg -2
 ```
 
 Switch the Yubikey Neo to the Yubikey 4 and run the command again:
 
 ```
-ykpamcfg -2
+$ ykpamcfg -2
 ```
 
-Both Yubikeys are now setup with your computer.
+Both Yubikeys are now setup with your Macbook and can be used. You should store the Yubikey 4 somewhere safe for recovery.
 
 # Enable Yubikey for Auth, Sudo and Screensaver
-Before you proceed, you should verify you have the `/usr/lib/pam/pam_yubico.so` file present on your Macbook from your preparations. If you dont, you will lock your self out of your Macbook!
+Before you proceed, you should verify you have the `/usr/lib/pam/pam_yubico.so` file present on your Macbook from your ealier preparations. If you dont, you will lock your self out of your Macbook now.
 
 Edit the following files:
 
@@ -190,7 +189,7 @@ Edit the following files:
 You need to use sudo to do so. From the terminal issue the following command:
 
 ```
-sudo vi /etc/pam.d/screensaver
+$ sudo vi /etc/pam.d/screensaver
 ```
 
 Add the following to the file:
@@ -199,25 +198,38 @@ Add the following to the file:
 auth required pam_yubico.so mode=challenge-response
 ```
 
+Ending up with something like this
+
+```
+# screensaver: auth account
+auth       optional       pam_krb5.so use_first_pass use_kcminit
+auth       required       pam_opendirectory.so use_first_pass nullok
+auth       required       pam_yubico.so mode=challenge-response
+account    required       pam_opendirectory.so
+account    sufficient     pam_self.so
+account    required       pam_group.so no_warn group=admin,wheel fail_safe
+account    required       pam_group.so no_warn deny group=admin,wheel ruser fail_safe
+```
+
+Also remember to set the screensaver to require password or it wont work anyway :)
+
+![Mac screensaver](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/screensaver.jpg "Macbook Screensaver Password")
+
 Before you alter the `sudo` and `authorization` files, you can verify everything works by enabling the screensaver first. If you cannot login from the screensaver while the Yubikey is not present, something is terrible wrong now and you should NOT continue.
 
 Use the screensaver to check both the Yubikeys before you proceed.
 
-Also remember to set the screensaver to require password.
-
-![Mac screensaver](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/screensaver.jpg "Macbook Screensaver Password")
-
 # Prepare GPG
-We need a Memory disk on the Mac for when we generate a random key. A 4 gigabyte memory disk can be created with the following command:
+We need a RAM disk on the Mac for when we generate a random key. A 4 gigabyte RAM disk can be created with the following command:
 
 ```
-diskutil erasevolume HFS+ 'RAMDisk' `hdiutil attach -nomount ram://8388608`
+$ diskutil erasevolume HFS+ 'RAMDisk' `hdiutil attach -nomount ram://8388608`
 ```
 
-Create a  new gpg.conf in the ram disk directory
+Create a new `gpg.conf` in the ram disk directory
 
 ```
-$ cat << EOF > gpg.conf
+$ cat << EOF > /Volumes/RAMDisk/gpg.conf
 use-agent
 personal-cipher-preferences AES256 AES192 AES CAST5
 personal-digest-preferences SHA512 SHA384 SHA256 SHA224
@@ -236,16 +248,28 @@ with-fingerprint
 EOF
 ```
 
-And make sure GPG starts using it and language is english:
+And make sure GPG starts using it and language is english and we have set the right permissions on files:
 
 ```
-export GNUPGHOME=$PWD
-export LANG=en
-umask 070
+$ export GNUPGHOME=/Volumes/RAMDisk
+$ export LANG=en
+$ umask 070
 ```
 
 # Generating More Secure GPG Keys
 Open a Terminal shell and start generating our new keys.
+
+## Determine keysize to use
+It seems there are different versions of the Yubikey out there. If you bought a recent one, you are hopefully lucky it supports 4096 keys.
+You can determine this by plugging in the Yubikey Neo and issue the following command:
+
+```
+$ gpg2 --card-status | grep -Fi 'key attributes'
+
+Key attributes ...: rsa2048 rsa2048 rsa2048
+```
+
+This example shows there is room for 3 2048 bit RSA keys. You will set this size for the Signing, Encryption and Authentication keys in the subkeys steps.
 
 ## Generating the Primary Key
 Generate a new key with GPG, selecting RSA (sign only) and the appropriate keysize, optionally specifying an expiry:
@@ -259,8 +283,10 @@ Please select what kind of key you want:
    (3) DSA (sign only)
    (4) RSA (sign only)
 Your selection? 4
+
 RSA keys may be between 1024 and 4096 bits long.
 What keysize do you want? (2048) 4096
+
 Requested keysize is 4096 bits
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -268,8 +294,10 @@ Please specify how long the key should be valid.
       <n>w = key expires in n weeks
       <n>m = key expires in n months
       <n>y = key expires in n years
+
 Key is valid for? (0) 0
 Key does not expire at all
+
 Is this correct? (y/N) y
 
 You need a user ID to identify your key; the software constructs the user ID
@@ -303,7 +331,13 @@ the command "--edit-key" to generate a subkey for this purpose.
 Export the key ID as a variable for use throughout:
 
 ```
-$ KEYID=0xFF3E7D88647EBCDB
+$ export KEYID=0xFF3E7D88647EBCDB
+```
+
+This step is important. You can see the key id from one of the last lines in the output from above:
+
+```
+pub   4096R/0xFF3E7D88647EBCDB 2016-05-24
 ```
 
 ### Create revocation certificate
@@ -315,6 +349,7 @@ $ gpg2 --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
 sec  4096R/0xFF3E7D88647EBCDB 2016-05-24 Dr Duh <doc@duh.to>
 
 Create a revocation certificate for this key? (y/N) y
+
 Please select the reason for the revocation:
   0 = No reason specified
   1 = Key has been compromised
@@ -323,10 +358,13 @@ Please select the reason for the revocation:
   Q = Cancel
 (Probably you want to select 1 here)
 Your decision? 1
+
 Enter an optional description; end it with an empty line:
->
+> (Press enter)
+
 Reason for revocation: Key has been compromised
 (No description given)
+
 Is this okay? (y/N) y
 
 You need a passphrase to unlock the secret key for
@@ -363,6 +401,8 @@ pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: 
 [ultimate] (1). Dr Duh <doc@duh.to>
 ```
 
+Now lets create the keys
+
 #### Signing key
 ```
 gpg> addkey
@@ -386,7 +426,7 @@ Please select what kind of key you want:
 Your selection? 4
 
 RSA keys may be between 1024 and 4096 bits long.
-What keysize do you want? (2048) 4096
+What keysize do you want? (2048) 2048
 Requested keysize is 4096 bits
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -408,7 +448,7 @@ generator a better chance to gain enough entropy.
 
 pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
                                trust: ultimate      validity: ultimate
-sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  2048R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
 [ultimate] (1). Dr Duh <doc@duh.to>
 ```
 
@@ -435,7 +475,7 @@ Please select what kind of key you want:
 Your selection? 6
 
 RSA keys may be between 1024 and 4096 bits long.
-What keysize do you want? (2048) 4096
+What keysize do you want? (2048) 2048
 Requested keysize is 4096 bits
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -457,12 +497,14 @@ generator a better chance to gain enough entropy.
 
 pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
                                trust: ultimate      validity: ultimate
-sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
-sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  2048R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  2048R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
 [ultimate] (1). Dr Duh <doc@duh.to>
 ```
 
 #### Authentication key
+This is the important key in our guide. This key is used for SSH authentication
+
 ```
 gpg> addkey
 Key is protected.
@@ -525,7 +567,7 @@ Current allowed actions: Authenticate
 
 Your selection? q
 RSA keys may be between 1024 and 4096 bits long.
-What keysize do you want? (2048) 4096
+What keysize do you want? (2048) 2048
 Requested keysize is 4096 bits
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -547,11 +589,15 @@ generator a better chance to gain enough entropy.
 
 pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
                                trust: ultimate      validity: ultimate
-sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
-sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
-sub  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
+sub  2048R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  2048R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  2048R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
 [ultimate] (1). Dr Duh <doc@duh.to>
+```
 
+Then save your work
+
+```
 gpg> save
 ```
 
@@ -565,16 +611,15 @@ $ gpg2 --list-secret-keys
 sec   4096R/0xFF3E7D88647EBCDB 2016-05-24
       Key fingerprint = 011C E16B D45B 27A5 5BA8  776D FF3E 7D88 647E BCDB
 uid                            Dr Duh <doc@duh.to>
-ssb   4096R/0xBECFA3C1AE191D15 2016-05-24
-ssb   4096R/0x5912A795E90DD2CF 2016-05-24
-ssb   4096R/0x3F29127E79649A3D 2016-05-24
+ssb   2048R/0xBECFA3C1AE191D15 2016-05-24
+ssb   2048R/0x5912A795E90DD2CF 2016-05-24
+ssb   2048R/0x3F29127E79649A3D 2016-05-24
 ```
 
 ### Export subkeys
 Save a copy of your subkeys:
 ```
 $ gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
-
 $ gpg2 --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
 ```
 
@@ -586,10 +631,10 @@ We recommend to back up the keys to an encrypted USB device. You will need this 
 TODO: How to create a secure USB device on a Macbook
 
 # Configure Yubikey as smartcard
-Plug in your Yubikey Neo and issue the following command in a Terminal:
+Plug in your Yubikey Neo and enter the following command in a Terminal:
 
 ```
-gpg2 --card-edit
+$ gpg2 --card-edit
 
 Reader ...........: Yubico Yubikey NEO OTP CCID
 Application ID ...: D2760001240102000006048871470000
@@ -612,10 +657,10 @@ Authentication key: [none]
 General key info..: [none]
 ```
 
-Look at the `Key attributes`. It will tell you the size of the keys supported. In this case it is a Version 2.0 of Yubikey that only supports key size 2048. Version 2.1 supports the size of 4096 etc. You should use this information when you are about to generate the keys in the next sections.
-
 ## Change PINs
-The default PIN codes are `12345678` and `123456`.
+The default PIN codes are `12345678` for admin and `123456` for default use. You will need to use the default pin on everyday basis when you need to use the ssh key for auth. The Admin key is only if you want to alter data on the card.
+
+Do not lose these pins EVER or you'll have to reset the card with the included `yubikey-reset.sh` script in this repo.
 
 ```
 gpg/card> admin
@@ -834,9 +879,9 @@ gpg> save
 # Using the Keys on your Macbook
 Paste the following text into a terminal window to create a recommended GPG configuration:
 ```
-mkdir -p ~/.gnupg
+$ mkdir -p ~/.gnupg
 
-cat << EOF > ~/.gnupg/gpg.conf
+$ cat << EOF > ~/.gnupg/gpg.conf
 auto-key-locate keyserver
 keyserver hkps://hkps.pool.sks-keyservers.net
 personal-cipher-preferences AES256 AES192 AES CAST5
@@ -857,7 +902,7 @@ use-agent
 require-cross-certification
 EOF
 
-cat << EOF > ~/.gnupg/gpg-agent.conf
+$ cat << EOF > ~/.gnupg/gpg-agent.conf
 enable-ssh-support
 pinentry-program /usr/local/bin/pinentry-mac
 default-cache-ttl 60
@@ -870,16 +915,16 @@ EOF
 ## Update your Shell Environment
 For pretty much all shells. I use zsh, so i alther the `~/.zshrc` file:
 ```
-export "GPG_TTY=$(tty)"
-export "SSH_AUTH_SOCK=${HOME}/.gnupg/S.gpg-agent.ssh"
+$ export "GPG_TTY=$(tty)"
+$ export "SSH_AUTH_SOCK=${HOME}/.gnupg/S.gpg-agent.ssh"
 ```
 
 ## Restart
 To make changes take affect, please restart the GPG agent:
 
 ```
-gpg-connect-agent killagent /bye
-gpg-connect-agent /bye
+$ gpg-connect-agent killagent /bye
+$ gpg-connect-agent /bye
 ```
 
 ## Verify your work
@@ -898,10 +943,16 @@ You can now copy this public key to the servers you want to use it on etc.
 When you are done, and you have made a backup of your work to an ENCRYPTED usb-drive, issue a secure erase of the RAM disk:
 
 ```
-gshred -zun 12 /Volumes/RAMDisk/*
+$ gshred -zun 12 /Volumes/RAMDisk/*
 ```
 
-When you have erased the RAM disk, reboot your Macbook and you are all set with a more secure Macbook.
+And unmount the RAM disk again
+
+```
+$ diskutil unmountDisk force /Volumes/RAMDisk
+```
+
+When you have erased and unmounted the RAM disk, reboot your Macbook and you are all set with a more secure Macbook.
 
 # References
 * https://www.yubico.com/wp-content/uploads/2015/04/YubiKey-OSX-Login.pdf
@@ -913,3 +964,4 @@ When you have erased the RAM disk, reboot your Macbook and you are all set with 
 * https://gist.github.com/bcomnes/647477a3a143774069755d672cb395ca
 * https://wiki.archlinux.org/index.php/GnuPG#pinentry
 * https://stackoverflow.com/questions/33961302/change-the-language-of-gnupg-on-a-mac
+* https://gpgtools.tenderapp.com/kb/gpg-keychain-faq/how-to-move-secret-keys-to-usb-drive
