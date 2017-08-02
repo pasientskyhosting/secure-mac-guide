@@ -26,6 +26,28 @@ Authentication on a workstation often is done by using a username and password. 
 - [Enable Yubikey for Auth, Sudo and Screensaver](#enable-yubikey-for-auth-sudo-and-screensaver)
 - [Generating More Secure GPG Keys](#generating-more-secure-gpg-keys)
 	- [Generating the Primary Key](#generating-the-primary-key)
+		- [Save Key ID](#save-key-id)
+		- [Create revocation certificate](#create-revocation-certificate)
+		- [Back up master key](#back-up-master-key)
+		- [Create subkeys](#create-subkeys)
+			- [Signing key](#signing-key)
+			- [Encryption key](#encryption-key)
+			- [Authentication key](#authentication-key)
+		- [Check your work](#check-your-work)
+		- [Export subkeys](#export-subkeys)
+		- [Back up everything](#back-up-everything)
+- [Configure Yubikey as smartcard](#configure-yubikey-as-smartcard)
+	- [Change PINs](#change-pins)
+	- [Set card information](#set-card-information)
+	- [Transfer keys](#transfer-keys)
+		- [Signature key](#signature-key)
+		- [Encryption key](#encryption-key)
+		- [Authentication key](#authentication-key)
+- [Using the Keys on your Macbook](#using-the-keys-on-your-macbook)
+	- [Update your Shell Environment](#update-your-shell-environment)
+	- [Restart](#restart)
+	- [Verify your work](#verify-your-work)
+- [Securely cleanup](#securely-cleanup)
 - [References](#references)
 
 <!-- /TOC -->
@@ -137,6 +159,7 @@ We also need to set the YubiKey mode to OTP/U2F/CCID. Open a Terminal and run th
 
 ```
 ykneomgr --set-mode=6
+ykpersonalize -m82
 ```
 
 # Configure PAM on your Macbook
@@ -157,7 +180,7 @@ Both Yubikeys are now setup with your computer.
 
 
 # Prepare GPG
-We need a Memory disk on the Mac for when we generate a random key. A 20 megabyte memory disk can be created with the following command:
+We need a Memory disk on the Mac for when we generate a random key. A 4 gigabyte memory disk can be created with the following command:
 
 ```
 diskutil erasevolume HFS+ 'RAMDisk' `hdiutil attach -nomount ram://8388608`
@@ -224,27 +247,643 @@ Also remember to set the screensaver to require password.
 Open a Terminal shell and start generating our new keys.
 
 ## Generating the Primary Key
-Invoke `gpg --gen-key` with the `--expert` flag to expose some additional menu items.
+Generate a new key with GPG, selecting RSA (sign only) and the appropriate keysize, optionally specifying an expiry:
 
 ```
-$ gpg --expert --gen-key
-gpg (GnuPG) 1.4.12; Copyright (C) 2012 Free Software Foundation, Inc.
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
+$ gpg --gen-key
 
 Please select what kind of key you want:
    (1) RSA and RSA (default)
    (2) DSA and Elgamal
    (3) DSA (sign only)
    (4) RSA (sign only)
+Your selection? 4
+RSA keys may be between 1024 and 4096 bits long.
+What keysize do you want? (2048) 4096
+Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+Key is valid for? (0) 0
+Key does not expire at all
+Is this correct? (y/N) y
+
+You need a user ID to identify your key; the software constructs the user ID
+from the Real Name, Comment and Email Address in this form:
+    "Heinrich Heine (Der Dichter) <heinrichh@duesseldorf.de>"
+
+Real name: Dr Duh
+Email address: doc@duh.to
+Comment:
+You selected this USER-ID:
+    "Dr Duh <doc@duh.to>"
+
+Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit? o
+You need a Passphrase to protect your secret key.
+
+gpg: key 0xFF3E7D88647EBCDB marked as ultimately trusted
+public and secret key created and signed.
+
+gpg: checking the trustdb
+gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+pub   4096R/0xFF3E7D88647EBCDB 2016-05-24
+      Key fingerprint = 011C E16B D45B 27A5 5BA8  776D FF3E 7D88 647E BCDB
+uid                 [ultimate] Dr Duh <doc@duh.to>
+
+Note that this key cannot be used for encryption.  You may want to use
+the command "--edit-key" to generate a subkey for this purpose.
+```
+
+### Save Key ID
+Export the key ID as a variable for use throughout:
+
+```
+$ KEYID=0xFF3E7D88647EBCDB
+```
+
+### Create revocation certificate
+Create a way to revoke your keys in case of loss or compromise, an explicit reason being optional
+
+```
+$ gpg --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
+
+sec  4096R/0xFF3E7D88647EBCDB 2016-05-24 Dr Duh <doc@duh.to>
+
+Create a revocation certificate for this key? (y/N) y
+Please select the reason for the revocation:
+  0 = No reason specified
+  1 = Key has been compromised
+  2 = Key is superseded
+  3 = Key is no longer used
+  Q = Cancel
+(Probably you want to select 1 here)
+Your decision? 1
+Enter an optional description; end it with an empty line:
+>
+Reason for revocation: Key has been compromised
+(No description given)
+Is this okay? (y/N) y
+
+You need a passphrase to unlock the secret key for
+user: "Dr Duh <doc@duh.to>"
+4096-bit RSA key, ID 0xFF3E7D88647EBCDB, created 2016-05-24
+
+ASCII armored output forced.
+Revocation certificate created.
+
+Please move it to a medium which you can hide away; if Mallory gets
+access to this certificate he can use it to make your key unusable.
+It is smart to print this certificate and store it away, just in case
+your media become unreadable.  But have some caution:  The print system of
+your machine might store the data and make it available to others!
+```
+
+### Back up master key
+Save a copy of the private key block:
+
+```
+$ gpg --armor --export-secret-keys $KEYID > $GNUPGHOME/master.key
+```
+
+### Create subkeys
+Edit the key to add subkeys:
+
+```
+$ gpg --expert --edit-key $KEYID
+
+Secret key is available.
+
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: ultimate      validity: ultimate
+[ultimate] (1). Dr Duh <doc@duh.to>
+```
+
+#### Signing key
+```
+gpg> addkey
+Key is protected.
+
+You need a passphrase to unlock the secret key for
+user: "Dr Duh <doc@duh.to>"
+4096-bit RSA key, ID 0xFF3E7D88647EBCDB, created 2016-05-24
+
+Please select what kind of key you want:
+   (3) DSA (sign only)
+   (4) RSA (sign only)
+   (5) Elgamal (encrypt only)
+   (6) RSA (encrypt only)
+   (7) DSA (set your own capabilities)
+   (8) RSA (set your own capabilities)
+Your selection? 4
+RSA keys may be between 1024 and 4096 bits long.
+What keysize do you want? (2048) 4096
+Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+Key is valid for? (0) 0
+Key does not expire at all
+Is this correct? (y/N) y
+Really create? (y/N) y
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+
+...................+++++
+..+++++
+
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: ultimate      validity: ultimate
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+[ultimate] (1). Dr Duh <doc@duh.to>
+```
+
+#### Encryption key
+```
+gpg> addkey
+Key is protected.
+
+You need a passphrase to unlock the secret key for
+user: "Dr Duh <doc@duh.to>"
+4096-bit RSA key, ID 0xFF3E7D88647EBCDB, created 2016-05-24
+
+Please select what kind of key you want:
+   (3) DSA (sign only)
+   (4) RSA (sign only)
+   (5) Elgamal (encrypt only)
+   (6) RSA (encrypt only)
+   (7) DSA (set your own capabilities)
+   (8) RSA (set your own capabilities)
+Your selection? 6
+RSA keys may be between 1024 and 4096 bits long.
+What keysize do you want? (2048) 4096
+Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+Key is valid for? (0) 0
+Key does not expire at all
+Is this correct? (y/N) y
+Really create? (y/N) y
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+
+.+++++
+...........+++++
+
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: ultimate      validity: ultimate
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+[ultimate] (1). Dr Duh <doc@duh.to>
+```
+
+#### Authentication key
+```
+gpg> addkey
+Key is protected.
+
+You need a passphrase to unlock the secret key for
+user: "Dr Duh <doc@duh.to>"
+4096-bit RSA key, ID 0xFF3E7D88647EBCDB, created 2016-05-24
+
+Please select what kind of key you want:
+   (3) DSA (sign only)
+   (4) RSA (sign only)
+   (5) Elgamal (encrypt only)
+   (6) RSA (encrypt only)
    (7) DSA (set your own capabilities)
    (8) RSA (set your own capabilities)
 Your selection? 8
+
+Possible actions for a RSA key: Sign Encrypt Authenticate
+Current allowed actions: Sign Encrypt
+
+   (S) Toggle the sign capability
+   (E) Toggle the encrypt capability
+   (A) Toggle the authenticate capability
+   (Q) Finished
+
+Your selection? s
+
+Possible actions for a RSA key: Sign Encrypt Authenticate
+Current allowed actions: Encrypt
+
+   (S) Toggle the sign capability
+   (E) Toggle the encrypt capability
+   (A) Toggle the authenticate capability
+   (Q) Finished
+
+Your selection? e
+
+Possible actions for a RSA key: Sign Encrypt Authenticate
+Current allowed actions:
+
+   (S) Toggle the sign capability
+   (E) Toggle the encrypt capability
+   (A) Toggle the authenticate capability
+   (Q) Finished
+
+Your selection? a
+
+Possible actions for a RSA key: Sign Encrypt Authenticate
+Current allowed actions: Authenticate
+
+   (S) Toggle the sign capability
+   (E) Toggle the encrypt capability
+   (A) Toggle the authenticate capability
+   (Q) Finished
+
+Your selection? q
+RSA keys may be between 1024 and 4096 bits long.
+What keysize do you want? (2048) 4096
+Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+Key is valid for? (0) 0
+Key does not expire at all
+Is this correct? (y/N) y
+Really create? (y/N) y
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+
++++++
+.....+++++
+
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: ultimate      validity: ultimate
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
+[ultimate] (1). Dr Duh <doc@duh.to>
+
+gpg> save
 ```
 
+### Check your work
+List your new secret keys:
+
+```
+$ gpg --list-secret-keys
+/tmp/tmp.aaiTTovYgo/secring.gpg
+-------------------------------
+sec   4096R/0xFF3E7D88647EBCDB 2016-05-24
+      Key fingerprint = 011C E16B D45B 27A5 5BA8  776D FF3E 7D88 647E BCDB
+uid                            Dr Duh <doc@duh.to>
+ssb   4096R/0xBECFA3C1AE191D15 2016-05-24
+ssb   4096R/0x5912A795E90DD2CF 2016-05-24
+ssb   4096R/0x3F29127E79649A3D 2016-05-24
+```
+
+### Export subkeys
+Save a copy of your subkeys:
+```
+$ gpg --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
+
+$ gpg --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
+```
+
+### Back up everything
+Once keys are moved to hardware, they cannot be extracted again (otherwise, what would be the point?), so make sure you have made an encrypted backup before proceeding.
+
+We recommend to back up the keys to an encrypted USB device.
+
+# Configure Yubikey as smartcard
+Plug in your Yubikey Neo and issue the following command in a Terminal:
+
+```
+gpg --card-edit
+
+Reader ...........: Yubico Yubikey NEO OTP U2F CCID
+Application ID ...: D2760001240102010006055532110000
+Version ..........: 2.0
+Manufacturer .....: Yubico
+Serial number ....: 05553211
+Name of cardholder: [ikke indstillet]
+Language prefs ...: [ikke indstillet]
+Sex ..............: ikke angivet
+URL of public key : [ikke indstillet]
+Login data .......: [ikke indstillet]
+Signature PIN ....: tvunget
+Key attributes ...: rsa2048 rsa2048 rsa2048
+Max. PIN lengths .: 127 127 127
+PIN retry counter : 3 3 3
+Signature counter : 0
+Signature key ....: [none]
+Encryption key....: [none]
+Authentication key: [none]
+General key info..: [none]
+```
+
+## Change PINs
+The default PIN codes are `12345678` and `123456`.
+
+```
+gpg/card> admin
+Admin commands are allowed
+
+gpg/card> passwd
+gpg: OpenPGP card no. D2760001240102010006055532110000 detected
+
+1 - change PIN
+2 - unblock PIN
+3 - change Admin PIN
+4 - set the Reset Code
+Q - quit
+
+Your selection? 3
+PIN changed.
+
+1 - change PIN
+2 - unblock PIN
+3 - change Admin PIN
+4 - set the Reset Code
+Q - quit
+
+1 - change PIN
+2 - unblock PIN
+3 - change Admin PIN
+4 - set the Reset Code
+Q - quit
+
+Your selection? 1
+PIN changed.
+
+1 - change PIN
+2 - unblock PIN
+3 - change Admin PIN
+4 - set the Reset Code
+Q - quit
+
+Your selection? q
+```
+
+## Set card information
+```
+gpg/card> name
+Cardholder's surname: Duh
+Cardholder's given name: Dr
+
+gpg/card> lang
+Language preferences: en
+
+gpg/card> login
+Login data (account name): doc@duh.to
+
+gpg/card> (Press Enter)
+
+gpg/card> quit
+```
+
+## Transfer keys
+```
+$ gpg --edit-key $KEYID
+
+Secret key is available.
+
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: ultimate      validity: ultimate
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
+[ultimate] (1). Dr Duh <doc@duh.to>
+
+gpg> toggle
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+ssb  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+ssb  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+
+gpg> key 1
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb* 4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+ssb  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+ssb  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+```
+
+### Signature key
+Move the signature key (you will be prompted for the key passphrase and admin PIN):
+
+```
+gpg> keytocard
+Signature key ....: [none]
+Encryption key....: [none]
+Authentication key: [none]
+
+Please select where to store the key:
+   (1) Signature key
+   (3) Authentication key
+Your selection? 1
+
+You need a passphrase to unlock the secret key for
+user: "Dr Duh <doc@duh.to>"
+4096-bit RSA key, ID 0xBECFA3C1AE191D15, created 2016-05-24
+
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb* 4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+ssb  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+```
+
+### Encryption key
+Type key 1 again to deselect and key 2 to select the next key:
+```
+gpg> key 1
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+ssb  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+
+gpg> key 2
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb* 4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+ssb  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+```
+
+Move the encryption key to card:
+
+```
+gpg> keytocard
+Signature key ....: 07AA 7735 E502 C5EB E09E  B8B0 BECF A3C1 AE19 1D15
+Encryption key....: [none]
+Authentication key: [none]
+
+Please select where to store the key:
+   (2) Encryption key
+Your selection? 2
+
+You need a passphrase to unlock the secret key for
+user: "Dr Duh <doc@duh.to>"
+4096-bit RSA key, ID 0x5912A795E90DD2CF, created 2016-05-24
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb* 4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+```
+
+### Authentication key
+Type key 2 again to deselect and key 3 to select the next key:
+
+```
+gpg> key 2
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+
+gpg> key 3
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb* 4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+(1)  Dr Duh <doc@duh.to>
+
+gpg> keytocard
+Signature key ....: 07AA 7735 E502 C5EB E09E  B8B0 BECF A3C1 AE19 1D15
+Encryption key....: 6F26 6F46 845B BEB8 BDF3  7E9B 5912 A795 E90D D2CF
+Authentication key: [none]
+
+Please select where to store the key:
+   (3) Authentication key
+Your selection? 3
+
+You need a passphrase to unlock the secret key for
+user: "Dr Duh <doc@duh.to>"
+4096-bit RSA key, ID 0x3F29127E79649A3D, created 2016-05-24
+
+sec  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never
+ssb  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+ssb* 4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never
+                     card-no: 0006 05553211
+(1)  Dr Duh <doc@duh.to>
+```
+
+Save and quit:
+
+```
+gpg> save
+```
+
+# Using the Keys on your Macbook
+Paste the following text into a terminal window to create a recommended GPG configuration:
+```
+mkdir -p ~/.gnupg
+
+cat << EOF > ~/.gnupg/gpg.conf
+auto-key-locate keyserver
+keyserver hkps://hkps.pool.sks-keyservers.net
+keyserver-options no-honor-keyserver-url
+keyserver-options ca-cert-file=/etc/sks-keyservers.netCA.pem
+keyserver-options no-honor-keyserver-url
+keyserver-options debug
+keyserver-options verbose
+personal-cipher-preferences AES256 AES192 AES CAST5
+personal-digest-preferences SHA512 SHA384 SHA256 SHA224
+default-preference-list SHA512 SHA384 SHA256 SHA224 AES256 AES192 AES CAST5 ZLIB BZIP2 ZIP Uncompressed
+cert-digest-algo SHA512
+s2k-cipher-algo AES256
+s2k-digest-algo SHA512
+charset utf-8
+fixed-list-mode
+no-comments
+no-emit-version
+keyid-format 0xlong
+list-options show-uid-validity
+verify-options show-uid-validity
+with-fingerprint
+use-agent
+require-cross-certification
+EOF
+
+cat << EOF > ~/.gnupg/gpg-agent.conf
+enable-ssh-support
+pinentry-program /usr/local/bin/pinentry-curses
+default-cache-ttl 60
+max-cache-ttl 120
+EOF
+```
+
+## Update your Shell Environment
+For pretty much all shells. I use zsh, so i alther the `~/.zshrc` file:
+```
+export "GPG_TTY=$(tty)"
+export "SSH_AUTH_SOCK=${HOME}/.gnupg/S.gpg-agent.ssh"
+```
+
+## Restart
+To make changes take affect, please restart the GPG agent:
+
+```
+gpg-connect-agent killagent /bye
+gig-connect-agent /bye
+```
+
+## Verify your work
+There is a -L option of ssh-add that lists public key parameters of all identities currently represented by the agent. Copy and paste the following output to the server authorized_keys file:
+
+```
+$ ssh-add -L
+ssh-rsa AAAAB4NzaC1yc2EAAAADAQABAAACAz[...]zreOKM+HwpkHzcy9DQcVG2Nw== cardno:000605553211
+```
+
+If you see a SSH key with the `cardno:` descriptions, you have now successfully setup a SSH key on your Yubikey.
+
+# Securely cleanup
+When you are done, and you have made a backup of your work to an ENCRYPTED usb-drive, issue a secure erase of the RAM disk:
+
+```
+srm -rf /Volumes/RAMDisk
+```
 
 # References
-<https://www.yubico.com/wp-content/uploads/2015/04/YubiKey-OSX-Login.pdf>
-<https://www.avisi.nl/blog/2014/05/06/two-factor-authentication-on-osx-a-yubikey-example/>
-<https://spin.atomicobject.com/2013/11/24/secure-gpg-keys-guide/>
-<https://medium.com/@ahawkins/securing-my-digital-life-gpg-yubikey-ssh-on-macos-5f115cb01266>
+* https://www.yubico.com/wp-content/uploads/2015/04/YubiKey-OSX-Login.pdf
+* https://www.avisi.nl/blog/2014/05/06/two-factor-authentication-on-osx-a-yubikey-example/
+* https://spin.atomicobject.com/2013/11/24/secure-gpg-keys-guide/
+* https://medium.com/@ahawkins/securing-my-digital-life-gpg-yubikey-ssh-on-macos-5f115cb01266
