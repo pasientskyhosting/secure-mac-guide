@@ -18,11 +18,63 @@ Authentication on a workstation often is done by using a username and password. 
 	- [Copy the PAM Module](#copy-the-pam-module)
 	- [Enable System Integrity Protection](#enable-system-integrity-protection)
 - [Configure your Yubikey](#configure-your-yubikey)
-- [Change Yubikey Mode](#change-yubikey-mode)
+	- [Change Yubikey Mode](#change-yubikey-mode)
 - [Configure PAM on your Macbook](#configure-pam-on-your-macbook)
 - [Enable Yubikey for Auth, Sudo and Screensaver](#enable-yubikey-for-auth-sudo-and-screensaver)
+- [screensaver: auth account](#screensaver-auth-account)
+- [Enable Yubikeylockd](#enable-yubikeylockd)
+	- [Disable yubikeylockd](#disable-yubikeylockd)
 - [Prepare GPG](#prepare-gpg)
 - [Generating More Secure GPG Keys](#generating-more-secure-gpg-keys)
+	- [Determine keysize to use](#determine-keysize-to-use)
+	- [Generating the Primary Key](#generating-the-primary-key)
+		- [Save Key ID](#save-key-id)
+		- [Create revocation certificate](#create-revocation-certificate)
+		- [Back up master key](#back-up-master-key)
+		- [Create subkeys](#create-subkeys)
+			- [Signing key](#signing-key)
+			- [Encryption key](#encryption-key)
+			- [Authentication key](#authentication-key)
+		- [Check your work](#check-your-work)
+		- [Export subkeys](#export-subkeys)
+		- [Back up everything](#back-up-everything)
+- [Configure Yubikey as smartcard](#configure-yubikey-as-smartcard)
+	- [Change PINs](#change-pins)
+	- [Set card information](#set-card-information)
+	- [Transfer keys](#transfer-keys)
+		- [Signature key](#signature-key)
+		- [Encryption key](#encryption-key)
+		- [Authentication key](#authentication-key)
+- [Using the Keys on your Macbook](#using-the-keys-on-your-macbook)
+	- [Update your Shell Environment](#update-your-shell-environment)
+	- [Restart](#restart)
+	- [Verify your work](#verify-your-work)
+- [Securely cleanup](#securely-cleanup)
+- [References](#references)
+
+<!-- /TOC -->!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [Purchase YubiKey](#purchase-yubikey)
+- [Prepare your Macbook](#prepare-your-macbook)
+- [Install required software](#install-required-software)
+	- [Install Homebrew](#install-homebrew)
+	- [Install GPG](#install-gpg)
+	- [Install Yubikey Personalization Tools](#install-yubikey-personalization-tools)
+	- [Install PAM Yubico](#install-pam-yubico)
+- [Enable PAM on your Macbook](#enable-pam-on-your-macbook)
+	- [Disable System Integrity Protection](#disable-system-integrity-protection)
+	- [Copy the PAM Module](#copy-the-pam-module)
+	- [Enable System Integrity Protection](#enable-system-integrity-protection)
+- [Configure your Yubikey](#configure-your-yubikey)
+	- [Change Yubikey Mode](#change-yubikey-mode)
+- [Configure PAM on your Macbook](#configure-pam-on-your-macbook)
+- [Enable Yubikey for Auth, Sudo and Screensaver](#enable-yubikey-for-auth-sudo-and-screensaver)
+- [screensaver: auth account](#screensaver-auth-account)
+- [Enable Yubikeylockd](#enable-yubikeylockd)
+	- [Disable yubikeylockd](#disable-yubikeylockd)
+- [Prepare GPG](#prepare-gpg)
+- [Generating More Secure GPG Keys](#generating-more-secure-gpg-keys)
+	- [Determine keysize to use](#determine-keysize-to-use)
 	- [Generating the Primary Key](#generating-the-primary-key)
 		- [Save Key ID](#save-key-id)
 		- [Create revocation certificate](#create-revocation-certificate)
@@ -218,6 +270,28 @@ Also remember to set the screensaver to require password or it wont work anyway 
 Before you alter the `sudo` and `authorization` files, you can verify everything works by enabling the screensaver first. If you cannot login from the screensaver while the Yubikey is not present, something is terrible wrong now and you should NOT continue.
 
 Use the screensaver to check both the Yubikeys before you proceed.
+
+# Enable Yubikeylockd
+Yubikeylockd is a simple daemon that locks your computer (starts the scrensaver) when you unplug the Yubikey. This is ideal for when you leave the computer and you simply just take the Yubikey out and it will simply lock automatically.
+
+To install Yubikeylockd, open a Terminal and enter the following command:
+
+```
+$ brew install https://raw.githubusercontent.com/shtirlic/yubikeylockd/master/yubikeylockd.rb
+```
+
+When brew is done, you need to enable the service. Enter the following command:
+
+```
+$ sudo brew services start yubikeylockd
+```
+
+## Disable yubikeylockd
+If you somehow do not want to have Yubikeylockd enabled anymore, yet we wouldn't recommend it. Open a Terminal and enter the following command:
+
+```
+$ sudo brew services stop yubikeylockd
+```
 
 # Prepare GPG
 We need a RAM disk on the Mac for when we generate a random key. A 4 gigabyte RAM disk can be created with the following command:
