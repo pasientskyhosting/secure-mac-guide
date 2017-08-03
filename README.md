@@ -989,3 +989,4 @@ When you have erased and unmounted the RAM disk, reboot your Macbook and you are
 * https://wiki.archlinux.org/index.php/GnuPG#pinentry
 * https://stackoverflow.com/questions/33961302/change-the-language-of-gnupg-on-a-mac
 * https://gpgtools.tenderapp.com/kb/gpg-keychain-faq/how-to-move-secret-keys-to-usb-drive
+* https://github.com/shtirlic/yubikeylockd
