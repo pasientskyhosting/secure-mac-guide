@@ -54,18 +54,17 @@ Authentication on a workstation often is done by using a username and password. 
 <!-- /TOC -->
 
 # Purchase YubiKey
-We use the Yubikey Neo as it features as a Smartcard and has options for NFC.
+We use the Yubikey 4 as it features 4096 bit keys.
 
-You should also buy a regular Yubikey as a backup key for your computer login, because if you lose your Neo, you wont be able to login into your computer.
+You should also buy another Yubikey as a backup key for your computer login, because if you lose your yubikey, you wont be able to login into your computer.
 
-* https://www.yubico.com/products/yubikey-hardware/yubikey-neo/
 * https://www.yubico.com/products/yubikey-hardware/yubikey4/
 
 # Prepare your Macbook
+
+## Enable full disk encryption
 Please make sure before you start this proces, that your Macbook has enabled FileVault 2 disk encryption.
 Apple has an exelent guide here https://support.apple.com/en-gb/HT204837
-
-When you have verified your computer has disk encryption enabled, and you use a strong password, start preparing your laptop for the Yubikey. This guide will allow you to enable the Yubikey as 2-Factor authentication for you laptop - this means you need to have the Yubikey plugged in, to login to your computer, while it will also help you configure your yubikey as a smartcard where you will store your SSH key you use to acces services.
 
 ## Configure idle and hibernation
 You may wish to enforce hibernation and evict FileVault keys from memory instead of traditional sleep to memory:
@@ -98,9 +97,9 @@ Enable it for iTerm which a lot of people use:
 ![SKI iTerm](https://mig5.net/sites/mig5.net/files/styles/medium/public/field/image/securekeyboard.png?itok=25YqK8AQ "iTerm enable SKI")
 
 
-## Enable firwall
+## Enable firwall and sealth mode
 Built-in, basic firewall which blocks incoming connections only.
-Note, this firewall does not have the ability to monitor, nor block outgoing connections.
+> Note: this firewall does not have the ability to monitor, nor block outgoing connections.
 
 ```
 $ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on # enable fw
@@ -111,13 +110,15 @@ $ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setallowsignedapp off
 $ sudo pkill -HUP socketfilterfw
 ```
 
-# Install required software
+Computer hackers scan networks so they can attempt to identify computers to attack. When stealth mode is enabled, your computer does not respond to ICMP ping requests, and does not answer to connection attempts from a closed TCP or UDP port.
+
+# Install required software for Yubikey and GPG
 The required software for this guide is:
 
 * Homebrew
 * PAM Yubico
-* Yubikey personalization tools
-* GPG
+* Yubikey Personalization Tools
+* GPG 2.1
 
 ## Install Homebrew
 Open a Terminal window and then run the following command to install Homebrew:
@@ -131,7 +132,7 @@ Open a Terminal window and then run the following commands:
 
 ```
 $ brew tap homebrew/versions
-$ brew install gnupg21 pinentry-mac ykneomgr coreutils
+$ brew install gnupg21 pinentry-mac coreutils
 ```
 
 ## Install Yubikey Personalization Tools
@@ -141,7 +142,7 @@ https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
 ## Install PAM Yubico
 Open a Terminal window, and run the following command:
 ```
-$ brew install yubico-pam
+$ brew install yubico-pam ykpers
 ```
 
 # Enable PAM on your Macbook
@@ -155,7 +156,7 @@ the file, and then enable System Integrity Protection
 ## Disable System Integrity Protection
 Restart your system. Once the screen turns black, hold the command and R keys until the
 Apple icon appears. This will boot your system into Recovery Mode.
-Note: The slower than normal boot time is expected behavior.
+> Note: The slower than normal boot time is expected behavior.
 
 Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
 
@@ -170,12 +171,12 @@ When the computer has rebooted. Open a Terminal window, and run the following co
 $ sudo cp /usr/local/Cellar/pam_yubico/2.23/lib/security/pam_yubico.so /usr/lib/pam/pam_yubico.so
 ```
 
-Note: The version number 2.23 might change by time. Make sure to alter this to copy the file.
+> Note: The version number `2.23` might change by time. Make sure to alter this to copy the file.
 
 ## Enable System Integrity Protection
 Restart your system. Once the screen turns black, hold the command and R keys until the
 Apple icon appears. This will boot your system into Recovery Mode.
-Note: The slower than normal boot time is expected behavior.
+> Note: The slower than normal boot time is expected behavior.
 
 Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
 
@@ -186,10 +187,10 @@ $ csrutil enable && reboot
 # Configure your Yubikey
 
 ## Reset it
-Before you start programming your Yubikey. Consider restting it with the script included in this folder
+Before you start programming your Yubikey. Consider restting it with the script included in this folder.
 
 ## Configuration
-Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the YubiKey Neo in a USB port on your Mac.
+Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the Yubikey in a USB port on your Mac.
 
 1. Open the "Settings tab at the top of the window, and ensure that the "Logging Settings"
 section has logging enabled, and the “Yubico Output” selected.
@@ -204,32 +205,30 @@ section has logging enabled, and the “Yubico Output” selected.
 
 ![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico.jpg "YubiKey Personalization Tool")
 
-You must configure both the Yubikey Neo and the Yubikey 4 with the Challenge-Response mode now.
+You must configure both the Yubikeys with the Challenge-Response mode now.
 
 ## Change Yubikey Mode
-We also need to set the YubiKey mode to OTP/U2F/CCID. This only works with the Yubikey Neo. Open a Terminal and run the following command:
+We also need to set the YubiKey mode to OTP/U2F/CCID. My Yubikey 4 was pr. default in this mode. See more at https://developers.yubico.com/libu2f-host/Mode_switch_YubiKey.html
 
-```
-$ ykneomgr --set-mode=6
-```
+If you prefer a GUI, install the Yubkey Neo Manager: https://developers.yubico.com/yubikey-neo-manager - works with Yubikey 4 too.
 
 # Configure PAM on your Macbook
-Open a Terminal window, and run the following command as your regular user, with firstly the Yubikey Neo inserted.
+Open a Terminal window, and run the following command as your regular user, with firstly the Yubikey inserted.
 
-Note: If you have secure keyboard input enabled for your terminal, this will give an error. Disable while you run the commands and reenable it.
+> Note: If you have secure keyboard input enabled for your terminal, this will give an error. Disable while you run the commands and reenable it.
 
 ```
 $ mkdir –m0700 –p ~/.yubico
 $ ykpamcfg -2
 ```
 
-Switch the Yubikey Neo to the Yubikey 4 and run the command again:
+Switch the Yubikey to the backup Yubikey and run the command again:
 
 ```
 $ ykpamcfg -2
 ```
 
-Both Yubikeys are now setup with your Macbook and can be used. You should store the Yubikey 4 somewhere safe for recovery.
+Both Yubikeys are now setup with your Macbook and can be used. You should store the backup Yubikey somewhere safe for recovery - like in a vault in your bank ;)
 
 # Enable Yubikey for Auth, Sudo and Screensaver
 Before you proceed, you should verify you have the `/usr/lib/pam/pam_yubico.so` file present on your Macbook from your ealier preparations. If you dont, you will lock your self out of your Macbook now.
@@ -336,7 +335,7 @@ Open a Terminal shell and start generating our new keys.
 
 ## Determine keysize to use
 It seems there are different versions of the Yubikey out there. If you bought a recent one, you are hopefully lucky it supports 4096 keys.
-You can determine this by plugging in the Yubikey Neo and issue the following command:
+You can determine this by plugging in the Yubikey and issue the following command:
 
 ```
 $ gpg2 --card-status | grep -Fi 'key attributes'
@@ -346,7 +345,7 @@ Key attributes ...: rsa2048 rsa2048 rsa2048
 
 This example shows there is room for 3 2048 bit RSA keys. You will set this size for the Signing, Encryption and Authentication keys in the subkeys steps.
 
-Note: Apparently the Yubikey 4 supports RSA keys of 4096, even though it says 2048 at the start. Check you are running the version 2.1 of Yubikey
+> Note: Apparently the Yubikey 4 supports RSA keys of 4096, even though it says 2048 at the start. Check you are running the version 2.1 of Yubikey
 
 ```
 $ gpg2 --card-status | grep "Version"
@@ -507,7 +506,7 @@ Please select what kind of key you want:
 Your selection? 4
 
 RSA keys may be between 1024 and 4096 bits long.
-What keysize do you want? (2048) 2048
+What keysize do you want? (2048) 4096
 Requested keysize is 4096 bits
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -529,7 +528,7 @@ generator a better chance to gain enough entropy.
 
 pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
                                trust: ultimate      validity: ultimate
-sub  2048R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
 [ultimate] (1). Dr Duh <doc@duh.to>
 ```
 
@@ -556,7 +555,7 @@ Please select what kind of key you want:
 Your selection? 6
 
 RSA keys may be between 1024 and 4096 bits long.
-What keysize do you want? (2048) 2048
+What keysize do you want? (2048) 4096
 Requested keysize is 4096 bits
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -578,8 +577,8 @@ generator a better chance to gain enough entropy.
 
 pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
                                trust: ultimate      validity: ultimate
-sub  2048R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
-sub  2048R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
 [ultimate] (1). Dr Duh <doc@duh.to>
 ```
 
@@ -648,7 +647,7 @@ Current allowed actions: Authenticate
 
 Your selection? q
 RSA keys may be between 1024 and 4096 bits long.
-What keysize do you want? (2048) 2048
+What keysize do you want? (2048) 4096
 Requested keysize is 4096 bits
 Please specify how long the key should be valid.
          0 = key does not expire
@@ -670,9 +669,9 @@ generator a better chance to gain enough entropy.
 
 pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
                                trust: ultimate      validity: ultimate
-sub  2048R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
-sub  2048R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
-sub  2048R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
 [ultimate] (1). Dr Duh <doc@duh.to>
 ```
 
@@ -712,16 +711,16 @@ We recommend to back up the keys to an encrypted USB device. You will need this 
 TODO: How to create a secure USB device on a Macbook
 
 # Configure Yubikey as smartcard
-Plug in your Yubikey Neo and enter the following command in a Terminal:
+Plug in your Yubikey and enter the following command in a Terminal:
 
 ```
 $ gpg2 --card-edit
 
-Reader ...........: Yubico Yubikey NEO OTP CCID
-Application ID ...: D2760001240102000006048871470000
-Version ..........: 2.0
+Reader ...........: Yubico Yubikey 4 OTP U2F CCID
+Application ID ...: D2760001240102010006056699490000
+Version ..........: 2.1
 Manufacturer .....: Yubico
-Serial number ....: 04887147
+Serial number ....: 05669949
 Name of cardholder: [ikke indstillet]
 Language prefs ...: [ikke indstillet]
 Sex ..............: ikke angivet
@@ -795,7 +794,8 @@ Language preferences: en
 gpg/card> login
 Login data (account name): doc@duh.to
 
-gpg/card> (Press Enter)
+gpg/card> sex
+Sex ((M)ale, (F)emale or space): m
 
 gpg/card> quit
 ```
@@ -988,8 +988,6 @@ enable-ssh-support
 pinentry-program /usr/local/bin/pinentry-mac
 default-cache-ttl 60
 max-cache-ttl 120
-debug guru
-log-file /tmp/gpg-agent.log
 EOF
 ```
 
