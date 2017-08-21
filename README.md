@@ -333,6 +333,15 @@ $ umask 070
 # Generating More Secure GPG Keys
 Open a Terminal shell and start generating our new keys.
 
+you have to run the command; every time that you open a new shell.
+
+```
+$ export GNUPGHOME=/Volumes/RAMDisk
+$ export LANG=en
+$ umask 070
+```
+
+
 ## Determine keysize to use
 It seems there are different versions of the Yubikey out there. If you bought a recent one, you are hopefully lucky it supports 4096 keys.
 You can determine this by plugging in the Yubikey and issue the following command:
