@@ -338,7 +338,7 @@ It seems there are different versions of the Yubikey out there. If you bought a 
 You can determine this by plugging in the Yubikey and issue the following command:
 
 ```
-$ gpg2 --card-status | grep -Fi 'key attributes'
+$ gpg --card-status | grep -Fi 'key attributes'
 
 Key attributes ...: rsa2048 rsa2048 rsa2048
 ```
@@ -348,14 +348,14 @@ This example shows there is room for 3 2048 bit RSA keys. You will set this size
 > Note: Apparently the Yubikey 4 supports RSA keys of 4096, even though it says 2048 at the start. Check you are running the version 2.1 of Yubikey
 
 ```
-$ gpg2 --card-status | grep "Version"
+$ gpg --card-status | grep "Version"
 ```
 
 ## Generating the Primary Key
 Generate a new key with GPG, selecting RSA (sign only) and the appropriate keysize, optionally specifying an expiry:
 
 ```
-$ gpg2 --full-generate-key
+$ gpg --full-generate-key
 
 Please select what kind of key you want:
    (1) RSA and RSA (default)
@@ -424,7 +424,7 @@ pub   4096R/0xFF3E7D88647EBCDB 2016-05-24
 Create a way to revoke your keys in case of loss or compromise, an explicit reason being optional
 
 ```
-$ gpg2 --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
+$ gpg --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
 
 sec  4096R/0xFF3E7D88647EBCDB 2016-05-24 Dr Duh <doc@duh.to>
 
@@ -465,14 +465,14 @@ your machine might store the data and make it available to others!
 Save a copy of the private key block:
 
 ```
-$ gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/master.key
+$ gpg --armor --export-secret-keys $KEYID > $GNUPGHOME/master.key
 ```
 
 ### Create subkeys
 Edit the key to add subkeys:
 
 ```
-$ gpg2 --expert --edit-key $KEYID
+$ gpg --expert --edit-key $KEYID
 
 Secret key is available.
 
@@ -685,7 +685,7 @@ gpg> save
 List your new secret keys:
 
 ```
-$ gpg2 --list-secret-keys
+$ gpg --list-secret-keys
 /Volumes/RAMDisk/pubring.kbx
 -------------------------------
 sec   4096R/0xFF3E7D88647EBCDB 2016-05-24
@@ -699,8 +699,8 @@ ssb   2048R/0x3F29127E79649A3D 2016-05-24
 ### Export subkeys
 Save a copy of your subkeys:
 ```
-$ gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
-$ gpg2 --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
+$ gpg --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
+$ gpg --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
 ```
 
 ### Back up everything
@@ -714,7 +714,7 @@ TODO: How to create a secure USB device on a Macbook
 Plug in your Yubikey and enter the following command in a Terminal:
 
 ```
-$ gpg2 --card-edit
+$ gpg --card-edit
 
 Reader ...........: Yubico Yubikey 4 OTP U2F CCID
 Application ID ...: D2760001240102010006056699490000
@@ -802,7 +802,7 @@ gpg/card> quit
 
 ## Transfer keys
 ```
-$ gpg2 --edit-key $KEYID
+$ gpg --edit-key $KEYID
 
 Secret key is available.
 
