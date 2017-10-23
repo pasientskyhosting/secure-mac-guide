@@ -1,57 +1,8 @@
-This is a practical guide to using [YubiKey](https://www.yubico.com/faq/yubikey/) as a SmartCard for storing GPG encryption and signing keys. Keys stored on a smartcard like YubiKey seem more difficult to steal than ones stored on disk, and are convenient for everyday use.
+This is a practical guide to using [YubiKey](https://www.yubico.com/faq/yubikey/) as a SmartCard for storing GPG encryption and signing keys. Keys stored on a smartcard like YubiKey seem more difficult to steal than ones stored on disk, and are convenient for everyday use..
 
 The blog "[Exploring Hard Tokens](https://www.avisi.nl/blog/2012/01/05/exploring-hard-tokens/)" describes the disadvantages of the combination of a username/password for acces control. Passwords can be cracked or retrieved by social engineering. They can be read from faulty systems or even retrieved from unsecured internet access.
 
 Authentication on a workstation often is done by using a username and password. Furthermore, it is almost impossible to detect when an attacker accesses a system. Therefore it is important to strengthen your authentication by adding a second step to your authentication process.
-
-<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
-
-- [Purchase YubiKey](#purchase-yubikey)
-- [Prepare your Macbook](#prepare-your-macbook)
-- [Install required software](#install-required-software)
-	- [Install Homebrew](#install-homebrew)
-	- [Install GPG](#install-gpg)
-	- [Install Yubikey Personalization Tools](#install-yubikey-personalization-tools)
-	- [Install PAM Yubico](#install-pam-yubico)
-- [Enable PAM on your Macbook](#enable-pam-on-your-macbook)
-	- [Disable System Integrity Protection](#disable-system-integrity-protection)
-	- [Copy the PAM Module](#copy-the-pam-module)
-	- [Enable System Integrity Protection](#enable-system-integrity-protection)
-- [Configure your Yubikey](#configure-your-yubikey)
-	- [Change Yubikey Mode](#change-yubikey-mode)
-- [Configure PAM on your Macbook](#configure-pam-on-your-macbook)
-- [Enable Yubikey for Auth, Sudo and Screensaver](#enable-yubikey-for-auth-sudo-and-screensaver)
-- [Enable Yubikeylockd](#enable-yubikeylockd)
-	- [Disable yubikeylockd](#disable-yubikeylockd)
-- [Prepare GPG](#prepare-gpg)
-- [Generating More Secure GPG Keys](#generating-more-secure-gpg-keys)
-	- [Determine keysize to use](#determine-keysize-to-use)
-	- [Generating the Primary Key](#generating-the-primary-key)
-		- [Save Key ID](#save-key-id)
-		- [Create revocation certificate](#create-revocation-certificate)
-		- [Back up master key](#back-up-master-key)
-		- [Create subkeys](#create-subkeys)
-			- [Signing key](#signing-key)
-			- [Encryption key](#encryption-key)
-			- [Authentication key](#authentication-key)
-		- [Check your work](#check-your-work)
-		- [Export subkeys](#export-subkeys)
-		- [Back up everything](#back-up-everything)
-- [Configure Yubikey as smartcard](#configure-yubikey-as-smartcard)
-	- [Change PINs](#change-pins)
-	- [Set card information](#set-card-information)
-	- [Transfer keys](#transfer-keys)
-		- [Signature key](#signature-key)
-		- [Encryption key](#encryption-key)
-		- [Authentication key](#authentication-key)
-- [Using the Keys on your Macbook](#using-the-keys-on-your-macbook)
-	- [Update your Shell Environment](#update-your-shell-environment)
-	- [Restart](#restart)
-	- [Verify your work](#verify-your-work)
-- [Securely cleanup](#securely-cleanup)
-- [References](#references)
-
-<!-- /TOC -->
 
 # Purchase YubiKey
 We use the Yubikey 4 as it features 4096 bit keys.
@@ -339,8 +290,7 @@ It seems there are different versions of the Yubikey out there. If you bought a 
 You can determine this by plugging in the Yubikey and issue the following command:
 
 ```
-gpg2 --card-status | grep -Fi 'key attributes'
-
+gpg --card-status | grep -Fi 'key attributes'
 Key attributes ...: rsa2048 rsa2048 rsa2048
 ```
 
@@ -349,14 +299,14 @@ This example shows there is room for 3 2048 bit RSA keys. You will set this size
 > Note: Apparently the Yubikey 4 supports RSA keys of 4096, even though it says 2048 at the start. Check you are running the version 2.1 of Yubikey
 
 ```
-gpg2 --card-status | grep "Version"
+gpg --card-status | grep "Version"
 ```
 
 ## Generating the Primary Key
 Generate a new key with GPG, selecting RSA (sign only) and the appropriate keysize, optionally specifying an expiry:
 
 ```
-gpg2 --full-generate-key
+gpg --full-generate-key
 
 Please select what kind of key you want:
    (1) RSA and RSA (default)
@@ -425,7 +375,7 @@ pub   4096R/0xFF3E7D88647EBCDB 2016-05-24
 Create a way to revoke your keys in case of loss or compromise, an explicit reason being optional
 
 ```
-gpg2 --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
+gpg --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
 
 sec  4096R/0xFF3E7D88647EBCDB 2016-05-24 Dr Duh <doc@duh.to>
 
@@ -466,14 +416,14 @@ your machine might store the data and make it available to others!
 Save a copy of the private key block:
 
 ```
-gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/master.key
+gpg --armor --export-secret-keys $KEYID > $GNUPGHOME/master.key
 ```
 
 ### Create subkeys
 Edit the key to add subkeys:
 
 ```
-gpg2 --expert --edit-key $KEYID
+gpg --expert --edit-key $KEYID
 
 Secret key is available.
 
@@ -686,7 +636,8 @@ gpg> save
 List your new secret keys:
 
 ```
-gpg2 --list-secret-keys
+gpg --list-secret-keys
+
 /Volumes/RAMDisk/pubring.kbx
 -------------------------------
 sec   4096R/0xFF3E7D88647EBCDB 2016-05-24
@@ -700,8 +651,8 @@ ssb   2048R/0x3F29127E79649A3D 2016-05-24
 ### Export subkeys
 Save a copy of your subkeys:
 ```
-gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
-gpg2 --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
+gpg --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
+gpg --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
 ```
 
 ### Back up everything
@@ -715,7 +666,7 @@ TODO: How to create a secure USB device on a Macbook
 Plug in your Yubikey and enter the following command in a Terminal:
 
 ```
-gpg2 --card-edit
+gpg --card-edit
 
 Reader ...........: Yubico Yubikey 4 OTP U2F CCID
 Application ID ...: D2760001240102010006056699490000
@@ -803,7 +754,7 @@ gpg/card> quit
 
 ## Transfer keys
 ```
-gpg2 --edit-key $KEYID
+gpg --edit-key $KEYID
 
 Secret key is available.
 
@@ -994,6 +945,7 @@ EOF
 
 ## Update your Shell Environment
 For pretty much all shells. I use zsh, so i alther the `~/.zshrc` file:
+
 ```
 export "GPG_TTY=$(tty)"
 export "SSH_AUTH_SOCK=${HOME}/.gnupg/S.gpg-agent.ssh"
