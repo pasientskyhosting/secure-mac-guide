@@ -78,6 +78,34 @@ Open a Terminal window and then run the following command to install Homebrew:
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
+## Install snobby
+Stubby is an application that acts as a local DNS Privacy stub resolver (using DNS-over-TLS). Stubby encrypts DNS queries sent from a client machine (desktop or laptop) to a DNS Privacy resolver increasing end user privacy.
+
+```
+brew install snobby
+```
+
+Enable snobby to start at boot:
+
+```
+sudo brew services start stubby
+```
+
+Then enable snobby dns for each interface
+
+```
+networksetup -listallnetworkservices 2>/dev/null | grep -v '*' | while read x ; do
+    networksetup -setdnsservers "$x" "127.0.0.1 ::1"
+done
+```
+
+### Test Stubby
+A quick test can be done by using dig (or your favourite DNS tool) on the loopback address
+
+```
+dig @127.0.0.1 www.example.com
+```
+
 ## Install GPG
 Open a Terminal window and then run the following commands:
 
@@ -1059,3 +1087,5 @@ You can verify that SSH is now able to see the private key from your keyring by 
 * https://stackoverflow.com/questions/33961302/change-the-language-of-gnupg-on-a-mac
 * https://gpgtools.tenderapp.com/kb/gpg-keychain-faq/how-to-move-secret-keys-to-usb-drive
 * https://github.com/shtirlic/yubikeylockd
+* https://getdnsapi.net/blog/dns-privacy-daemon-stubby/
+* https://dnsprivacy.org/wiki/pages/viewpage.action?pageId=3145812
