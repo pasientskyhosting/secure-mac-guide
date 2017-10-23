@@ -70,8 +70,8 @@ Apple has an exelent guide here https://support.apple.com/en-gb/HT204837
 You may wish to enforce hibernation and evict FileVault keys from memory instead of traditional sleep to memory:
 
 ```
-$ sudo pmset -a hibernatemode 25
-$ sudo pmset -a destroyfvkeyonstandby 1
+sudo pmset -a hibernatemode 25
+sudo pmset -a destroyfvkeyonstandby 1
 ```
 
 If you choose to evict FileVault keys in standby mode, you should also modify your standby and power nap settings. Otherwise, your machine may wake while in standby mode and then power off due to the absence of the FileVault key. See this [issue](https://github.com/drduh/macOS-Security-and-Privacy-Guide/issues/124) for more information. These settings can be changed with:
@@ -89,25 +89,25 @@ Command line users who wish to add an additional layer of security to their keyb
 
 ### Terminal
 Enable it for the build in Terminal on Macbook:
-![SKI Terminal](http://cdn.osxdaily.com/wp-content/uploads/2011/12/secure-keyboard-entry.jpg "Terminal enable SKI")
 
+![SKI Terminal](http://cdn.osxdaily.com/wp-content/uploads/2011/12/secure-keyboard-entry.jpg "Terminal enable SKI")
 
 ### iTerm
 Enable it for iTerm which a lot of people use:
-![SKI iTerm](https://mig5.net/sites/mig5.net/files/styles/medium/public/field/image/securekeyboard.png?itok=25YqK8AQ "iTerm enable SKI")
 
+![SKI iTerm](https://mig5.net/sites/mig5.net/files/styles/medium/public/field/image/securekeyboard.png?itok=25YqK8AQ "iTerm enable SKI")
 
 ## Enable firwall and sealth mode
 Built-in, basic firewall which blocks incoming connections only.
 > Note: this firewall does not have the ability to monitor, nor block outgoing connections.
 
 ```
-$ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on # enable fw
-$ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode on # enable logging
-$ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on # dont respond to pings
-$ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setallowsigned off
-$ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setallowsignedapp off
-$ sudo pkill -HUP socketfilterfw
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on # enable fw
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setloggingmode on # enable logging
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on # dont respond to pings
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setallowsigned off
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setallowsignedapp off
+sudo pkill -HUP socketfilterfw
 ```
 
 Computer hackers scan networks so they can attempt to identify computers to attack. When stealth mode is enabled, your computer does not respond to ICMP ping requests, and does not answer to connection attempts from a closed TCP or UDP port.
@@ -124,15 +124,15 @@ The required software for this guide is:
 Open a Terminal window and then run the following command to install Homebrew:
 
 ```
-$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
 ## Install GPG
 Open a Terminal window and then run the following commands:
 
 ```
-$ brew tap homebrew/versions
-$ brew install gnupg21 pinentry-mac coreutils
+brew tap homebrew/versions
+brew install gnupg21 pinentry-mac coreutils
 ```
 
 ## Install Yubikey Personalization Tools
@@ -142,7 +142,7 @@ https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
 ## Install PAM Yubico
 Open a Terminal window, and run the following command:
 ```
-$ brew install yubico-pam ykpers
+brew install yubico-pam ykpers
 ```
 
 # Enable PAM on your Macbook
@@ -161,14 +161,14 @@ Apple icon appears. This will boot your system into Recovery Mode.
 Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
 
 ```
-$ csrutil disable && reboot
+csrutil disable && reboot
 ```
 
 ## Copy the PAM Module
 When the computer has rebooted. Open a Terminal window, and run the following command:
 
 ```
-$ sudo cp /usr/local/Cellar/pam_yubico/2.23/lib/security/pam_yubico.so /usr/lib/pam/pam_yubico.so
+sudo cp /usr/local/Cellar/pam_yubico/2.23/lib/security/pam_yubico.so /usr/lib/pam/pam_yubico.so
 ```
 
 > Note: The version number `2.23` might change by time. Make sure to alter this to copy the file.
@@ -181,7 +181,7 @@ Apple icon appears. This will boot your system into Recovery Mode.
 Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
 
 ```
-$ csrutil enable && reboot
+csrutil enable && reboot
 ```
 
 # Configure your Yubikey
@@ -218,14 +218,15 @@ Open a Terminal window, and run the following command as your regular user, with
 > Note: If you have secure keyboard input enabled for your terminal, this will give an error. Disable while you run the commands and reenable it.
 
 ```
-$ mkdir –m0700 –p ~/.yubico
-$ ykpamcfg -2
+mkdir –p ~/.yubico
+chmod -r 0700 ~/.yubico
+ykpamcfg -2
 ```
 
 Switch the Yubikey to the backup Yubikey and run the command again:
 
 ```
-$ ykpamcfg -2
+ykpamcfg -2
 ```
 
 Both Yubikeys are now setup with your Macbook and can be used. You should store the backup Yubikey somewhere safe for recovery - like in a vault in your bank ;)
@@ -242,7 +243,7 @@ Edit the following files:
 You need to use sudo to do so. From the terminal issue the following command:
 
 ```
-$ sudo vi /etc/pam.d/screensaver
+sudo vi /etc/pam.d/screensaver
 ```
 
 Add the following to the file:
@@ -277,33 +278,33 @@ Yubikeylockd is a simple daemon that locks your computer (starts the scrensaver)
 To install Yubikeylockd, open a Terminal and enter the following command:
 
 ```
-$ brew install https://raw.githubusercontent.com/shtirlic/yubikeylockd/master/yubikeylockd.rb
+brew install https://raw.githubusercontent.com/shtirlic/yubikeylockd/master/yubikeylockd.rb
 ```
 
 When brew is done, you need to enable the service. Enter the following command:
 
 ```
-$ sudo brew services start yubikeylockd
+sudo brew services start yubikeylockd
 ```
 
 ## Disable yubikeylockd
 If you somehow do not want to have Yubikeylockd enabled anymore, yet we wouldn't recommend it. Open a Terminal and enter the following command:
 
 ```
-$ sudo brew services stop yubikeylockd
+sudo brew services stop yubikeylockd
 ```
 
 # Prepare GPG
 We need a RAM disk on the Mac for when we generate a random key. A 4 gigabyte RAM disk can be created with the following command:
 
 ```
-$ diskutil erasevolume HFS+ 'RAMDisk' `hdiutil attach -nomount ram://8388608`
+diskutil erasevolume HFS+ 'RAMDisk' `hdiutil attach -nomount ram://8388608`
 ```
 
 Create a new `gpg.conf` in the ram disk directory
 
 ```
-$ cat << EOF > /Volumes/RAMDisk/gpg.conf
+cat << EOF > /Volumes/RAMDisk/gpg.conf
 use-agent
 personal-cipher-preferences AES256 AES192 AES CAST5
 personal-digest-preferences SHA512 SHA384 SHA256 SHA224
@@ -325,20 +326,20 @@ EOF
 And make sure GPG starts using it and language is english and we have set the right permissions on files:
 
 ```
-$ export GNUPGHOME=/Volumes/RAMDisk
-$ export LANG=en
-$ umask 070
+export GNUPGHOME=/Volumes/RAMDisk
+export LANG=en
+umask 070
 ```
 
 # Generating More Secure GPG Keys
-Open a Terminal shell and start generating our new keys.
+Use the same terminal you ran the export of GNUPGHOME in when continueing the next steps.
 
 ## Determine keysize to use
 It seems there are different versions of the Yubikey out there. If you bought a recent one, you are hopefully lucky it supports 4096 keys.
 You can determine this by plugging in the Yubikey and issue the following command:
 
 ```
-$ gpg2 --card-status | grep -Fi 'key attributes'
+gpg2 --card-status | grep -Fi 'key attributes'
 
 Key attributes ...: rsa2048 rsa2048 rsa2048
 ```
@@ -348,14 +349,14 @@ This example shows there is room for 3 2048 bit RSA keys. You will set this size
 > Note: Apparently the Yubikey 4 supports RSA keys of 4096, even though it says 2048 at the start. Check you are running the version 2.1 of Yubikey
 
 ```
-$ gpg2 --card-status | grep "Version"
+gpg2 --card-status | grep "Version"
 ```
 
 ## Generating the Primary Key
 Generate a new key with GPG, selecting RSA (sign only) and the appropriate keysize, optionally specifying an expiry:
 
 ```
-$ gpg2 --full-generate-key
+gpg2 --full-generate-key
 
 Please select what kind of key you want:
    (1) RSA and RSA (default)
@@ -411,7 +412,7 @@ the command "--edit-key" to generate a subkey for this purpose.
 Export the key ID as a variable for use throughout:
 
 ```
-$ export KEYID=0xFF3E7D88647EBCDB
+export KEYID=0xFF3E7D88647EBCDB
 ```
 
 This step is important. You can see the key id from one of the last lines in the output from above:
@@ -424,7 +425,7 @@ pub   4096R/0xFF3E7D88647EBCDB 2016-05-24
 Create a way to revoke your keys in case of loss or compromise, an explicit reason being optional
 
 ```
-$ gpg2 --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
+gpg2 --gen-revoke $KEYID > $GNUPGHOME/revoke.txt
 
 sec  4096R/0xFF3E7D88647EBCDB 2016-05-24 Dr Duh <doc@duh.to>
 
@@ -465,14 +466,14 @@ your machine might store the data and make it available to others!
 Save a copy of the private key block:
 
 ```
-$ gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/master.key
+gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/master.key
 ```
 
 ### Create subkeys
 Edit the key to add subkeys:
 
 ```
-$ gpg2 --expert --edit-key $KEYID
+gpg2 --expert --edit-key $KEYID
 
 Secret key is available.
 
@@ -685,7 +686,7 @@ gpg> save
 List your new secret keys:
 
 ```
-$ gpg2 --list-secret-keys
+gpg2 --list-secret-keys
 /Volumes/RAMDisk/pubring.kbx
 -------------------------------
 sec   4096R/0xFF3E7D88647EBCDB 2016-05-24
@@ -699,8 +700,8 @@ ssb   2048R/0x3F29127E79649A3D 2016-05-24
 ### Export subkeys
 Save a copy of your subkeys:
 ```
-$ gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
-$ gpg2 --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
+gpg2 --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
+gpg2 --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
 ```
 
 ### Back up everything
@@ -714,7 +715,7 @@ TODO: How to create a secure USB device on a Macbook
 Plug in your Yubikey and enter the following command in a Terminal:
 
 ```
-$ gpg2 --card-edit
+gpg2 --card-edit
 
 Reader ...........: Yubico Yubikey 4 OTP U2F CCID
 Application ID ...: D2760001240102010006056699490000
@@ -802,7 +803,7 @@ gpg/card> quit
 
 ## Transfer keys
 ```
-$ gpg2 --edit-key $KEYID
+gpg2 --edit-key $KEYID
 
 Secret key is available.
 
@@ -960,9 +961,9 @@ gpg> save
 # Using the Keys on your Macbook
 Paste the following text into a terminal window to create a recommended GPG configuration:
 ```
-$ mkdir -p ~/.gnupg
+mkdir -p ~/.gnupg
 
-$ cat << EOF > ~/.gnupg/gpg.conf
+cat << EOF > ~/.gnupg/gpg.conf
 auto-key-locate keyserver
 keyserver hkps://hkps.pool.sks-keyservers.net
 personal-cipher-preferences AES256 AES192 AES CAST5
@@ -983,7 +984,7 @@ use-agent
 require-cross-certification
 EOF
 
-$ cat << EOF > ~/.gnupg/gpg-agent.conf
+cat << EOF > ~/.gnupg/gpg-agent.conf
 enable-ssh-support
 pinentry-program /usr/local/bin/pinentry-mac
 default-cache-ttl 60
@@ -994,23 +995,23 @@ EOF
 ## Update your Shell Environment
 For pretty much all shells. I use zsh, so i alther the `~/.zshrc` file:
 ```
-$ export "GPG_TTY=$(tty)"
-$ export "SSH_AUTH_SOCK=${HOME}/.gnupg/S.gpg-agent.ssh"
+export "GPG_TTY=$(tty)"
+export "SSH_AUTH_SOCK=${HOME}/.gnupg/S.gpg-agent.ssh"
 ```
 
 ## Restart
 To make changes take affect, please restart the GPG agent:
 
 ```
-$ gpg-connect-agent killagent /bye
-$ gpg-connect-agent /bye
+gpg-connect-agent killagent /bye
+gpg-connect-agent /bye
 ```
 
 ## Verify your work
 There is a -L option of ssh-add that lists public key parameters of all identities currently represented by the agent. Copy and paste the following output to the server authorized_keys file:
 
 ```
-$ ssh-add -L
+ssh-add -L
 ssh-rsa AAAAB4NzaC1yc2EAAAADAQABAAACAz[...]zreOKM+HwpkHzcy9DQcVG2Nw== cardno:000605553211
 ```
 
@@ -1018,20 +1019,81 @@ If you see a SSH key with the `cardno:` descriptions, you have now successfully 
 
 You can now copy this public key to the servers you want to use it on etc.
 
+## Requiring touch to authenticate
+By default the Yubikey will perform key operations without requiring a touch from the user. To require a touch for every SSH connection, use the [Yubikey Manager](https://developers.yubico.com/yubikey-manager/) (you'll need the Admin PIN):
+
+```
+ykman openpgp touch aut on
+```
+
+To require a touch for the signing and encrypting keys as well:
+
+```
+ykman openpgp touch sig on
+ykman openpgp touch enc on
+```
+
+The Yubikey will blink when it's waiting for the touch.
+
 # Securely cleanup
 When you are done, and you have made a backup of your work to an ENCRYPTED usb-drive, issue a secure erase of the RAM disk:
 
 ```
-$ gshred -zun 12 /Volumes/RAMDisk/*
+gshred -zun 12 /Volumes/RAMDisk/*
 ```
 
 And unmount the RAM disk again
 
 ```
-$ diskutil unmountDisk force /Volumes/RAMDisk
+diskutil unmountDisk force /Volumes/RAMDisk
 ```
 
 When you have erased and unmounted the RAM disk, reboot your Macbook and you are all set with a more secure Macbook.
+
+# Lose of Yubikey
+In case you should lose your Yubikey eveything is not yet over and data is not yet lost. If you have another Yubikey nearby, you can simply redeploy the secure keys to a new Yubikey.
+
+## Access to private SSH key
+Start by recreating the RAMDisk drive with hdutil as done when you created the keys. Next, copy back all the files from your secure backup you took, to the RAMDisk.
+When files are in place, run the export commands again to set the GNUPGHOME folder to the RAMDisk. Next, list your keys with keygrip:
+
+```
+gpg -k --with-keygrip
+
+/Volumes/RAMDisk/pubring.kbx
+------------------------------
+pub   rsa2048/93BDD96B 2017-06-29 [SC]
+      D03833D3D52F5FFCCC73452461671825E8DEC139
+      Keygrip = 8A6CDC5FCE05A5B251BD8C397B269607534B4702
+uid         [ultimate] Big John <big.john@gmail.com>
+sub   rsa2048/0424163D 2017-06-29 [E]
+      Keygrip = E110250E32B811D45879A66F487CE95BC1906D77
+sub   rsa2048/8F228EDB 2017-06-29 [A]
+      Keygrip = 32BC5688805A640D495E8A7B41EC78F74E77E098
+```
+
+Grab the unique id from the Authentication key which is the key with the [A] next to it. Add that keygrip to GNUPG's sshcontrol:
+
+```
+echo 32BC5688805A640D495E8A7B41EC78F74E77E098 > /Volumes/RAMDisk/sshcontrol
+```
+
+You need to copy the gpg-agent config to your RAMDisk too:
+
+```
+cp ~/.gnupg/gpg-agent.conf /Volumes/RAMDisk
+```
+
+Then export the SSH_AUTH_SOCK to point to the RAMDisk instead and restart your gpg agent:
+
+```
+export "SSH_AUTH_SOCK=/Volumes/RAMDisk/S.gpg-agent.ssh"
+
+gpg-connect-agent killagent /bye
+gpg-connect-agent /bye
+```
+
+You can verify that SSH is now able to see the private key from your keyring by issueing `ssh-add -L`
 
 # References
 * https://www.yubico.com/wp-content/uploads/2015/04/YubiKey-OSX-Login.pdf
