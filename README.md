@@ -32,7 +32,6 @@ sudo pmset -a powernap 0
 sudo pmset -a standby 0
 sudo pmset -a standbydelay 0
 sudo pmset -a autopoweroff 0
-
 ```
 
 ## Enable Secure Keyboard Entry
@@ -48,7 +47,7 @@ Enable it for iTerm which a lot of people use:
 
 ![SKI iTerm](https://mig5.net/sites/mig5.net/files/styles/medium/public/field/image/securekeyboard.png?itok=25YqK8AQ "iTerm enable SKI")
 
-## Enable firwall and sealth mode
+## Enable firewall and stealth mode
 Built-in, basic firewall which blocks incoming connections only.
 > Note: this firewall does not have the ability to monitor, nor block outgoing connections.
 
@@ -78,11 +77,11 @@ Open a Terminal window and then run the following command to install Homebrew:
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
-## Install snobby
+## Install stubby
 Stubby is an application that acts as a local DNS Privacy stub resolver (using DNS-over-TLS). Stubby encrypts DNS queries sent from a client machine (desktop or laptop) to a DNS Privacy resolver increasing end user privacy.
 
 ```
-brew install snobby
+brew install stubby
 ```
 
 Enable snobby to start at boot:
