@@ -98,11 +98,62 @@ networksetup -listallnetworkservices 2>/dev/null | grep -v '*' | while read x ; 
 done
 ```
 
+### Block DNS queries
+You should block all connections to other DNS servers as various programs use some sort of internal DNS resolver. Chrome has this build in, lots of programs also falls back to systemd's resolver. So to make sure we always use Stubby as DNS resolver, we simply just block all DNS connections to anything but Stubby:
+
+Start of by edit `/etc/pf.conf` and add the following line to the `start` of the file:
+
+```
+block drop quick on !lo0 proto udp from any to any port = 53
+```
+
+Then reload the firewall with:
+
+```
+sudo pfctl -ef /etc/pf.conf
+```
+
 ### Test Stubby
 A quick test can be done by using dig (or your favourite DNS tool) on the loopback address
 
 ```
 dig @127.0.0.1 www.example.com
+
+; <<>> DiG 9.9.7-P3 <<>> @127.0.0.1 www.example.com
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 52807
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+; OPT=8: 00 00 00 00  (.) (.) (.) (.)
+;; QUESTION SECTION:
+;www.example.com.		IN	A
+
+;; ANSWER SECTION:
+wWW.ExAmPLe.com.	27319	IN	A	93.184.216.34
+
+;; AUTHORITY SECTION:
+ExAmPLe.com.		1751	IN	NS	b.iana-servers.net.
+ExAmPLe.com.		1751	IN	NS	a.iana-servers.net.
+
+;; Query time: 226 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Mon Oct 30 09:56:58 CET 2017
+;; MSG SIZE  rcvd: 169
+```
+
+You should also test and make sure you cannot use external DNS servers. The following should give you a timeout:
+
+```
+dig @8.8.8.8 www.example.com
+
+; <<>> DiG 9.9.7-P3 <<>> @8.8.8.8 www.example.com
+; (1 server found)
+;; global options: +cmd
+;; connection timed out; no servers could be reached
 ```
 
 ## Install GPG
