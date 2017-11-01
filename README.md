@@ -161,7 +161,7 @@ Open a Terminal window and then run the following commands:
 
 ```
 brew tap homebrew/versions
-brew install gnupg21 pinentry-mac coreutils
+brew install gnupg2 pinentry-mac coreutils
 ```
 
 ## Install Yubikey Personalization Tools
@@ -229,7 +229,7 @@ section has logging enabled, and the “Yubico Output” selected.
   1. Select Configuration Slot 2
   2. Select Variable input for HMAC-SHA1 Mode
   3. Click Generate to generate a new Secret Key (20 bytes Hex)
-  4. Make sure it the box is unchecked for "Require user input (button press)"
+  4. Make sure it the box is `unchecked` for "Require user input (button press)"
   5. Click Write Configuration
 
 ![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico.jpg "YubiKey Personalization Tool")
@@ -252,13 +252,7 @@ chmod -r 0700 ~/.yubico
 ykpamcfg -2
 ```
 
-Switch the Yubikey to the backup Yubikey and run the command again:
-
-```
-ykpamcfg -2
-```
-
-Both Yubikeys are now setup with your Macbook and can be used. You should store the backup Yubikey somewhere safe for recovery - like in a vault in your bank ;)
+Your Yubikey are now setup with your Macbook and can be used. You should store the backup Yubikey somewhere safe for recovery - like in a vault in your bank ;)
 
 # Enable Yubikey for Auth, Sudo and Screensaver
 Before you proceed, you should verify you have the `/usr/lib/pam/pam_yubico.so` file present on your Macbook from your ealier preparations. If you dont, you will lock your self out of your Macbook now.
