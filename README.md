@@ -62,19 +62,34 @@ sudo pkill -HUP socketfilterfw
 
 Computer hackers scan networks so they can attempt to identify computers to attack. When stealth mode is enabled, your computer does not respond to ICMP ping requests, and does not answer to connection attempts from a closed TCP or UDP port.
 
-# Install required software for Yubikey and GPG
+# Install required software
 The required software for this guide is:
 
 * Homebrew
 * PAM Yubico
 * Yubikey Personalization Tools
 * GPG 2.1
+* Stubby
+* OpenSSL
 
 ## Install Homebrew
 Open a Terminal window and then run the following command to install Homebrew:
 
 ```
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+## Install better packages
+The version of OpenSSL in Sierra is 0.9.8zh which is not current. It doesn't support TLS 1.1 or newer, elliptic curve ciphers, and more.
+
+Apple declares OpenSSL deprecated in their Cryptographic Services Guide document. Their version also has patches which may surprise you.
+
+The version of Curl which comes with macOS uses Secure Transport for SSL/TLS validation.
+
+```
+brew install openssl
+brew install curl --with-openssl
+brew install wget
 ```
 
 ## Install stubby
@@ -94,7 +109,7 @@ Then enable snobby dns for each interface
 
 ```
 networksetup -listallnetworkservices 2>/dev/null | grep -v '*' | while read x ; do
-    networksetup -setdnsservers "$x" "127.0.0.1 ::1"
+    networksetup -setdnsservers "$x" 127.0.0.1 ::1
 done
 ```
 
