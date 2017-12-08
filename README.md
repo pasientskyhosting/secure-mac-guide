@@ -241,11 +241,6 @@ csrutil enable && reboot
 ```
 
 # Configure your Yubikey
-
-## Reset it
-Before you start programming your Yubikey. Consider restting it with the script included in this folder.
-
-## Configuration
 Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the Yubikey in a USB port on your Mac.
 
 1. Open the "Settings tab at the top of the window, and ensure that the "Logging Settings"
@@ -262,11 +257,6 @@ section has logging enabled, and the “Yubico Output” selected.
 ![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico.jpg "YubiKey Personalization Tool")
 
 You must configure both the Yubikeys with the Challenge-Response mode now.
-
-## Change Yubikey Mode
-We also need to set the YubiKey mode to OTP/U2F/CCID. My Yubikey 4 was pr. default in this mode. See more at https://developers.yubico.com/libu2f-host/Mode_switch_YubiKey.html
-
-If you prefer a GUI, install the Yubkey Neo Manager: https://developers.yubico.com/yubikey-neo-manager - works with Yubikey 4 too.
 
 # Configure PAM on your Macbook
 Open a Terminal window, and run the following command as your regular user, with firstly the Yubikey inserted.
@@ -373,7 +363,7 @@ with-fingerprint
 EOF
 ```
 
-And make sure GPG starts using it and language is english and we have set the right permissions on files:
+And make sure GPG starts using it and language is english and we have set the right permissions on files. Do not close the Terminal after this, as you need the exported variables present in your shell.
 
 ```
 export GNUPGHOME=/Volumes/RAMDisk
@@ -382,7 +372,7 @@ umask 070
 ```
 
 # Generating More Secure GPG Keys
-Use the same terminal you ran the export of GNUPGHOME in when continueing the next steps.
+Use the `same terminal` you ran the export of GNUPGHOME in when continueing the next steps.
 
 ## Determine keysize to use
 It seems there are different versions of the Yubikey out there. If you bought a recent one, you are hopefully lucky it supports 4096 keys.
@@ -1037,13 +1027,13 @@ EOF
 cat << EOF > ~/.gnupg/gpg-agent.conf
 enable-ssh-support
 pinentry-program /usr/local/bin/pinentry-mac
-default-cache-ttl 60
-max-cache-ttl 120
+default-cache-ttl 10800
+max-cache-ttl 10800
 EOF
 ```
 
 ## Update your Shell Environment
-For pretty much all shells. I use zsh, so i alther the `~/.zshrc` file:
+For pretty much all shells. I use `zsh`, so i alther the `~/.zshrc` file:
 
 ```
 export "GPG_TTY=$(tty)"
@@ -1051,7 +1041,7 @@ export "SSH_AUTH_SOCK=${HOME}/.gnupg/S.gpg-agent.ssh"
 ```
 
 ## Restart
-To make changes take affect, please restart the GPG agent:
+To make changes take affect, please restart the GPG agent `in a new terminal where GPG_TTY and SSH_AUTH_SOCK is set`:
 
 ```
 gpg-connect-agent killagent /bye
@@ -1070,22 +1060,6 @@ If you see a SSH key with the `cardno:` descriptions, you have now successfully 
 
 You can now copy this public key to the servers you want to use it on etc.
 
-## Requiring touch to authenticate
-By default the Yubikey will perform key operations without requiring a touch from the user. To require a touch for every SSH connection, use the [Yubikey Manager](https://developers.yubico.com/yubikey-manager/) (you'll need the Admin PIN):
-
-```
-ykman openpgp touch aut on
-```
-
-To require a touch for the signing and encrypting keys as well:
-
-```
-ykman openpgp touch sig on
-ykman openpgp touch enc on
-```
-
-The Yubikey will blink when it's waiting for the touch.
-
 # Securely cleanup
 When you are done, and you have made a backup of your work to an ENCRYPTED usb-drive, issue a secure erase of the RAM disk:
 
@@ -1101,10 +1075,13 @@ diskutil unmountDisk force /Volumes/RAMDisk
 
 When you have erased and unmounted the RAM disk, reboot your Macbook and you are all set with a more secure Macbook.
 
-# Lose of Yubikey
+# Misc
+Different information and help.
+
+## Lose of Yubikey
 In case you should lose your Yubikey eveything is not yet over and data is not yet lost. If you have another Yubikey nearby, you can simply redeploy the secure keys to a new Yubikey.
 
-## Access to private SSH key
+### Access to private SSH key
 Start by recreating the RAMDisk drive with hdutil as done when you created the keys. Next, copy back all the files from your secure backup you took, to the RAMDisk.
 When files are in place, run the export commands again to set the GNUPGHOME folder to the RAMDisk. Next, list your keys with keygrip:
 
@@ -1145,6 +1122,27 @@ gpg-connect-agent /bye
 ```
 
 You can verify that SSH is now able to see the private key from your keyring by issueing `ssh-add -L`
+
+## Requiring touch to authenticate
+By default the Yubikey will perform key operations without requiring a touch from the user. To require a touch for every SSH connection, use the [Yubikey Manager](https://developers.yubico.com/yubikey-manager/) (you'll need the Admin PIN):
+
+```
+ykman openpgp touch aut on
+```
+
+To require a touch for the signing and encrypting keys as well:
+
+```
+ykman openpgp touch sig on
+ykman openpgp touch enc on
+```
+
+The Yubikey will blink when it's waiting for the touch.
+
+## Change Yubikey Mode
+We also need to set the YubiKey mode to OTP/U2F/CCID. My Yubikey 4 was pr. default in this mode. See more at https://developers.yubico.com/libu2f-host/Mode_switch_YubiKey.html
+
+If you prefer a GUI, install the Yubkey Neo Manager: https://developers.yubico.com/yubikey-neo-manager - works with Yubikey 4 too.
 
 # References
 * https://www.yubico.com/wp-content/uploads/2015/04/YubiKey-OSX-Login.pdf
