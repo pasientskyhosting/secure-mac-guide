@@ -28,10 +28,14 @@ sudo pmset -a destroyfvkeyonstandby 1
 If you choose to evict FileVault keys in standby mode, you should also modify your standby and power nap settings. Otherwise, your machine may wake while in standby mode and then power off due to the absence of the FileVault key. See this [issue](https://github.com/drduh/macOS-Security-and-Privacy-Guide/issues/124) for more information. These settings can be changed with:
 
 ```
+sudo pmset -a womp 0
 sudo pmset -a powernap 0
-sudo pmset -a standby 0
-sudo pmset -a standbydelay 0
-sudo pmset -a autopoweroff 0
+sudo pmset -a standby 1
+sudo pmset -a tcpkeepalive 0
+sudo pmset -a ttyskeepawake 0
+sudo pmset -a standbydelay 600
+sudo pmset -a autopoweroff 1
+sudo pmset -a autopoweroffdelay 605
 ```
 
 ## Enable Secure Keyboard Entry
@@ -61,6 +65,14 @@ sudo pkill -HUP socketfilterfw
 ```
 
 Computer hackers scan networks so they can attempt to identify computers to attack. When stealth mode is enabled, your computer does not respond to ICMP ping requests, and does not answer to connection attempts from a closed TCP or UDP port.
+
+## Disable ipv6 temporarily addresses
+Privacy addresses were disabled by default in versions prior to OS X 10.7. Since then they are enabled by default. To disable their use with a sysctl
+
+```
+sysctl net.inet6.ip6.use_tempaddr=0
+echo "sysctl net.inet6.ip6.use_tempaddr=0" >> /etc/sysctl.conf
+```
 
 # Install required software
 The required software for this guide is:
@@ -116,7 +128,7 @@ done
 ### Block DNS queries
 You should block all connections to other DNS servers as various programs use some sort of internal DNS resolver. Chrome has this build in, lots of programs also falls back to systemd's resolver. So to make sure we always use Stubby as DNS resolver, we simply just block all DNS connections to anything but Stubby:
 
-Start of by edit `/etc/pf.conf` and add the following line to the `start` of the file:
+Start of by edit `/etc/pf.conf` and add the following line to the `end` of the file:
 
 ```
 block drop quick on !lo0 proto udp from any to any port = 53
@@ -1148,3 +1160,4 @@ You can verify that SSH is now able to see the private key from your keyring by 
 * https://github.com/shtirlic/yubikeylockd
 * https://getdnsapi.net/blog/dns-privacy-daemon-stubby/
 * https://dnsprivacy.org/wiki/pages/viewpage.action?pageId=3145812
+* https://derflounder.wordpress.com/2011/11/23/using-the-command-line-to-unlock-or-decrypt-your-filevault-2-encrypted-boot-drive/
