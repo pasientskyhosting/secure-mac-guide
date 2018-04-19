@@ -41,13 +41,13 @@ sudo pmset -a autopoweroffdelay 605
 ## Enable Secure Keyboard Entry
 Command line users who wish to add an additional layer of security to their keyboarding within Terminal app can find a helpful privacy feature built into the Mac client. Whether aiming for generally increasing security, if using a public Mac, or are simply concerned about things like keyloggers or any other potentially unauthorized access to your keystrokes and character entries, you can enable this feature in the Mac OS X Terminal app to secure keyboard entry and any command line input into the terminal.
 
-### Terminal
+### Mac buildin Terminal
 Enable it for the build in Terminal on Macbook:
 
 ![SKI Terminal](http://cdn.osxdaily.com/wp-content/uploads/2011/12/secure-keyboard-entry.jpg "Terminal enable SKI")
 
-### iTerm
-Enable it for iTerm which a lot of people use:
+### iTerm2
+Enable it for iTerm which a lot of people use (highly recommended):
 
 ![SKI iTerm](https://mig5.net/sites/mig5.net/files/styles/medium/public/field/image/securekeyboard.png?itok=25YqK8AQ "iTerm enable SKI")
 
@@ -128,7 +128,7 @@ done
 ### Block DNS queries
 You should block all connections to other DNS servers as various programs use some sort of internal DNS resolver. Chrome has this build in, lots of programs also falls back to systemd's resolver. So to make sure we always use Stubby as DNS resolver, we simply just block all DNS connections to anything but Stubby:
 
-Start of by edit `/etc/pf.conf` and add the following line to the `end` of the file:
+Start of by edit `/etc/pf.conf` and add the following line to the ! `end` ! of the file:
 
 ```
 block drop quick on !lo0 proto udp from any to any port = 53
@@ -191,55 +191,6 @@ brew tap homebrew/versions
 brew install gnupg2 pinentry-mac coreutils
 ```
 
-## Install Yubikey Personalization Tools
-Install the latest version of the YubiKey Personalization Tool from the App Store
-https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
-
-## Install PAM Yubico
-Open a Terminal window, and run the following command:
-```
-brew install yubico-pam ykpers
-```
-
-# Enable PAM on your Macbook
-Mac OS X 10.11 (El Capitan) introduced a new security feature, System Integrity Protection
-(AKA “rootless”). The feature protects certain directories from being modified. In order for the
-OS X login to function in version 10.11, a file required for the Yubico PAM module to function
-(pam_yubico.so) needs to be moved to a directory protected by System Integrity Protection.
-To resolve this issue, it is necessary to temporarily disable System Integrity Protection, move
-the file, and then enable System Integrity Protection
-
-## Disable System Integrity Protection
-Restart your system. Once the screen turns black, hold the command and R keys until the
-Apple icon appears. This will boot your system into Recovery Mode.
-> Note: The slower than normal boot time is expected behavior.
-
-Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
-
-```
-csrutil disable && reboot
-```
-
-## Copy the PAM Module
-When the computer has rebooted. Open a Terminal window, and run the following command:
-
-```
-sudo cp /usr/local/Cellar/pam_yubico/2.23/lib/security/pam_yubico.so /usr/lib/pam/pam_yubico.so
-```
-
-> Note: The version number `2.23` might change by time. Make sure to alter this to copy the file.
-
-## Enable System Integrity Protection
-Restart your system. Once the screen turns black, hold the command and R keys until the
-Apple icon appears. This will boot your system into Recovery Mode.
-> Note: The slower than normal boot time is expected behavior.
-
-Click on the Utilities menu at the top of the screen, and then click Terminal. Enter the following command:
-
-```
-csrutil enable && reboot
-```
-
 # Configure your Yubikey
 Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the Yubikey in a USB port on your Mac.
 
@@ -258,21 +209,31 @@ section has logging enabled, and the “Yubico Output” selected.
 
 You must configure both the Yubikeys with the Challenge-Response mode now.
 
-# Configure PAM on your Macbook
+## Install Yubikey Personalization Tools
+Install the latest version of the YubiKey Personalization Tool from the App Store
+https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
+
+# Install PAM Yubico
+Open a Terminal window, and run the following command:
+```
+brew install pam_yubico
+```
+
+## Configure PAM on your Macbook
 Open a Terminal window, and run the following command as your regular user, with firstly the Yubikey inserted.
 
 > Note: If you have secure keyboard input enabled for your terminal, this will give an error. Disable while you run the commands and reenable it.
 
 ```
 mkdir –p ~/.yubico
-chmod -r 0700 ~/.yubico
+chmod -R 0700 ~/.yubico
 ykpamcfg -2
 ```
 
 Your Yubikey are now setup with your Macbook and can be used. You should store the backup Yubikey somewhere safe for recovery - like in a vault in your bank ;)
 
-# Enable Yubikey for Auth, Sudo and Screensaver
-Before you proceed, you should verify you have the `/usr/lib/pam/pam_yubico.so` file present on your Macbook from your ealier preparations. If you dont, you will lock your self out of your Macbook now.
+## Enable Yubikey for Auth, Sudo and Screensaver
+Before you proceed, you should verify you have the `/usr/local/lib/security/pam_yubico.so` file present on your Macbook from your ealier preparations. If you dont, you will lock your self out of your Macbook now.
 
 Edit the following files:
 
@@ -289,7 +250,7 @@ sudo vi /etc/pam.d/screensaver
 Add the following to the file:
 
 ```
-auth required pam_yubico.so mode=challenge-response
+auth       required       /usr/local/lib/security/pam_yubico.so mode=challenge-response
 ```
 
 Ending up with something like this
@@ -297,7 +258,7 @@ Ending up with something like this
 ```
 auth       optional       pam_krb5.so use_first_pass use_kcminit
 auth       required       pam_opendirectory.so use_first_pass nullok
-auth       required       pam_yubico.so mode=challenge-response
+auth       required       /usr/local/lib/security/pam_yubico.so mode=challenge-response
 account    required       pam_opendirectory.so
 account    sufficient     pam_self.so
 account    required       pam_group.so no_warn group=admin,wheel fail_safe
@@ -371,27 +332,9 @@ export LANG=en
 umask 070
 ```
 
-# Generating More Secure GPG Keys
-Use the `same terminal` you ran the export of GNUPGHOME in when continueing the next steps.
-
-## Determine keysize to use
-It seems there are different versions of the Yubikey out there. If you bought a recent one, you are hopefully lucky it supports 4096 keys.
-You can determine this by plugging in the Yubikey and issue the following command:
-
-```
-gpg --card-status | grep -Fi 'key attributes'
-Key attributes ...: rsa2048 rsa2048 rsa2048
-```
-
-This example shows there is room for 3 2048 bit RSA keys. You will set this size for the Signing, Encryption and Authentication keys in the subkeys steps.
-
-> Note: Apparently the Yubikey 4 supports RSA keys of 4096, even though it says 2048 at the start. Check you are running the version 2.1 of Yubikey
-
-```
-gpg --card-status | grep "Version"
-```
-
 ## Generating the Primary Key
+Use the `same terminal session` you ran the export of GNUPGHOME in when continueing the next steps.
+
 Generate a new key with GPG, selecting RSA (sign only) and the appropriate keysize, optionally specifying an expiry:
 
 ```
@@ -744,12 +687,25 @@ gpg --armor --export-secret-keys $KEYID > $GNUPGHOME/mastersub.key
 gpg --armor --export-secret-subkeys $KEYID > $GNUPGHOME/sub.key
 ```
 
+### Export public keys
+This file should be publicly shared:
+
+```
+gpg --armor --export $KEYID > $HOME/pubkey.txt
+```
+
+Optionally, it may be uploaded to a public keyserver:
+
+```
+gpg --keyserver pgp.mit.edu --send-key $KEYID
+```
+
+After a little while, it ought to propagate to other servers.
+
 ### Back up everything
 Once keys are moved to hardware, they cannot be extracted again (otherwise, what would be the point?), so make sure you have made an encrypted backup before proceeding.
 
 We recommend to back up the keys to an encrypted USB device. You will need this backup incase you LOSE your Yubikey and need to create a new one
-
-TODO: How to create a secure USB device on a Macbook
 
 # Configure Yubikey as smartcard
 Plug in your Yubikey and enter the following command in a Terminal:
@@ -998,8 +954,23 @@ Save and quit:
 gpg> save
 ```
 
+## Securely cleanup
+When you are done, and you have made a backup of your work to an ENCRYPTED usb-drive, issue a secure erase of the RAM disk:
+
+```
+gshred -zun 12 /Volumes/RAMDisk/*
+```
+
+And unmount the RAM disk again
+
+```
+diskutil unmountDisk force /Volumes/RAMDisk
+```
+
+When you have erased and unmounted the RAM disk, reboot your Macbook and you are all set with a more secure Macbook.
+
 # Using the Keys on your Macbook
-Paste the following text into a terminal window to create a recommended GPG configuration:
+Start by opening a new terminal session and paste the following text into a terminal window to create a recommended GPG configuration:
 ```
 mkdir -p ~/.gnupg
 
@@ -1032,8 +1003,65 @@ max-cache-ttl 10800
 EOF
 ```
 
+## Import public key into your keyring
+Import it from a file:
+
+```
+gpg --import < $HOME/pubkey.txt
+gpg: key 0xFF3E7D88647EBCDB: public key "Dr Duh <doc@duh.to>" imported
+gpg: Total number processed: 1
+gpg:               imported: 1  (RSA: 1)
+```
+
+## Trust master key
+Edit the imported key to assign it ultimate trust:
+```
+gpg --edit-key 0xFF3E7D88647EBCDB
+
+Secret key is available.
+
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: unknown       validity: unknown
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
+[ unknown] (1). Dr Duh <doc@duh.to>
+
+gpg> trust
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: unknown       validity: unknown
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
+[ unknown] (1). Dr Duh <doc@duh.to>
+
+Please decide how far you trust this user to correctly verify other users' keys
+(by looking at passports, checking fingerprints from different sources, etc.)
+
+  1 = I don't know or won't say
+  2 = I do NOT trust
+  3 = I trust marginally
+  4 = I trust fully
+  5 = I trust ultimately
+  m = back to the main menu
+
+Your decision? 5
+Do you really want to set this key to ultimate trust? (y/N) y
+
+pub  4096R/0xFF3E7D88647EBCDB  created: 2016-05-24  expires: never       usage: SC
+                               trust: ultimate      validity: unknown
+sub  4096R/0xBECFA3C1AE191D15  created: 2016-05-24  expires: never       usage: S
+sub  4096R/0x5912A795E90DD2CF  created: 2016-05-24  expires: never       usage: E
+sub  4096R/0x3F29127E79649A3D  created: 2016-05-24  expires: never       usage: A
+[ unknown] (1). Dr Duh <doc@duh.to>
+Please note that the shown key validity is not necessarily correct
+unless you restart the program.
+
+gpg> quit
+```
+
 ## Update your Shell Environment
-For pretty much all shells. I use `zsh`, so i alther the `~/.zshrc` file:
+For pretty much all shells. I use `zsh`, so i alter the `~/.zshrc` file:
 
 ```
 export "GPG_TTY=$(tty)"
@@ -1059,21 +1087,6 @@ ssh-rsa AAAAB4NzaC1yc2EAAAADAQABAAACAz[...]zreOKM+HwpkHzcy9DQcVG2Nw== cardno:000
 If you see a SSH key with the `cardno:` descriptions, you have now successfully setup a SSH key on your Yubikey.
 
 You can now copy this public key to the servers you want to use it on etc.
-
-# Securely cleanup
-When you are done, and you have made a backup of your work to an ENCRYPTED usb-drive, issue a secure erase of the RAM disk:
-
-```
-gshred -zun 12 /Volumes/RAMDisk/*
-```
-
-And unmount the RAM disk again
-
-```
-diskutil unmountDisk force /Volumes/RAMDisk
-```
-
-When you have erased and unmounted the RAM disk, reboot your Macbook and you are all set with a more secure Macbook.
 
 # Misc
 Different information and help.
