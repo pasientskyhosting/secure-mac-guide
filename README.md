@@ -1,21 +1,21 @@
-This is a practical guide to using [YubiKey](https://www.yubico.com/faq/yubikey/) as a SmartCard for storing GPG encryption and signing keys. Keys stored on a smartcard like YubiKey seem more difficult to steal than ones stored on disk, and are convenient for everyday use..
+This is a practical guide to using [YubiKey](https://www.yubico.com/faq/yubikey/) as a SmartCard for storing GPG encryption and signing keys. Keys stored on a SmartCard like YubiKey seem more difficult to steal than ones stored on disk, and are convenient for everyday use..
 
-The blog "[Exploring Hard Tokens](https://www.avisi.nl/blog/2012/01/05/exploring-hard-tokens/)" describes the disadvantages of the combination of a username/password for acces control. Passwords can be cracked or retrieved by social engineering. They can be read from faulty systems or even retrieved from unsecured internet access.
+The blog "[Exploring Hard Tokens](https://www.avisi.nl/blog/2012/01/05/exploring-hard-tokens/)" describes the disadvantages of the combination of a username/password for access control. Passwords can be cracked or retrieved by social engineering. They can be read from faulty systems or even retrieved from unsecured internet access.
 
 Authentication on a workstation often is done by using a username and password. Furthermore, it is almost impossible to detect when an attacker accesses a system. Therefore it is important to strengthen your authentication by adding a second step to your authentication process.
 
 # Purchase YubiKey
-We use the Yubikey 4 as it features 4096 bit keys.
+We use the YubiKey 4 as it features 4096 bit keys.
 
-You should also buy another Yubikey as a backup key for your computer login, because if you lose your yubikey, you wont be able to login into your computer.
+You should also buy another YubiKey as a backup key for your computer login, because if you lose your YubiKey, you wont be able to login into your computer.
 
 * https://www.yubico.com/products/yubikey-hardware/yubikey4/
 
 # Prepare your Macbook
 
 ## Enable full disk encryption
-Please make sure before you start this proces, that your Macbook has enabled FileVault 2 disk encryption.
-Apple has an exelent guide here https://support.apple.com/en-gb/HT204837
+Please make sure before you start this process, that your Macbook has enabled FileVault 2 disk encryption.
+Apple has an excellent guide here https://support.apple.com/en-gb/HT204837
 
 ## Configure idle and hibernation
 You may wish to enforce hibernation and evict FileVault keys from memory instead of traditional sleep to memory:
@@ -41,7 +41,7 @@ sudo pmset -a autopoweroffdelay 605
 ## Enable Secure Keyboard Entry
 Command line users who wish to add an additional layer of security to their keyboarding within Terminal app can find a helpful privacy feature built into the Mac client. Whether aiming for generally increasing security, if using a public Mac, or are simply concerned about things like keyloggers or any other potentially unauthorized access to your keystrokes and character entries, you can enable this feature in the Mac OS X Terminal app to secure keyboard entry and any command line input into the terminal.
 
-### Mac buildin Terminal
+### Mac builtin Terminal
 Enable it for the build in Terminal on Macbook:
 
 ![SKI Terminal](http://cdn.osxdaily.com/wp-content/uploads/2011/12/secure-keyboard-entry.jpg "Terminal enable SKI")
@@ -71,7 +71,7 @@ Privacy addresses were disabled by default in versions prior to OS X 10.7. Since
 
 ```
 sysctl net.inet6.ip6.use_tempaddr=0
-echo "sysctl net.inet6.ip6.use_tempaddr=0" >> /etc/sysctl.conf
+echo "net.inet6.ip6.use_tempaddr=0" >> sudo tee -a /etc/sysctl.conf
 ```
 
 # Install required software
@@ -79,7 +79,7 @@ The required software for this guide is:
 
 * Homebrew
 * PAM Yubico
-* Yubikey Personalization Tools
+* YubiKey Personalization Tools
 * GPG 2.1
 * Stubby
 * OpenSSL
@@ -111,13 +111,13 @@ Stubby is an application that acts as a local DNS Privacy stub resolver (using D
 brew install stubby
 ```
 
-Enable snobby to start at boot:
+Enable Stubby to start at boot:
 
 ```
 sudo brew services start stubby
 ```
 
-Then enable snobby dns for each interface
+Then enable snobby DNS for each interface
 
 ```
 networksetup -listallnetworkservices 2>/dev/null | grep -v '*' | while read x ; do
@@ -128,7 +128,7 @@ done
 ### Block DNS queries
 You should block all connections to other DNS servers as various programs use some sort of internal DNS resolver. Chrome has this build in, lots of programs also falls back to systemd's resolver. So to make sure we always use Stubby as DNS resolver, we simply just block all DNS connections to anything but Stubby:
 
-Start of by edit `/etc/pf.conf` and add the following line to the ! `end` ! of the file:
+Start of by editing `/etc/pf.conf` and add the following line to the **end** of the file:
 
 ```
 block drop quick on !lo0 proto udp from any to any port = 53
@@ -140,8 +140,13 @@ Then reload the firewall with:
 sudo pfctl -ef /etc/pf.conf
 ```
 
+Verify that the rule is active with:
+```
+pfctl -v -s rules
+```
+
 ### Test Stubby
-A quick test can be done by using dig (or your favourite DNS tool) on the loopback address
+A quick test can be done by using dig (or your favorite DNS tool) on the loopback address
 
 ```
 dig @127.0.0.1 www.example.com
@@ -187,15 +192,18 @@ dig @8.8.8.8 www.example.com
 Open a Terminal window and then run the following commands:
 
 ```
-brew tap homebrew/versions
 brew install gnupg2 pinentry-mac coreutils
 ```
 
-# Configure your Yubikey
-Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the Yubikey in a USB port on your Mac.
+## Install YubiKey Personalization Tools
+Install the latest version of the YubiKey Personalization Tool from the App Store
+https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
+
+# Configure your YubiKey
+Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the YubiKey in a USB port on your Mac.
 
 1. Open the "Settings tab at the top of the window, and ensure that the "Logging Settings"
-section has logging enabled, and the “Yubico Output” selected.
+section has logging enabled, and the “Yubico Format“ selected.
 
 2. Open the “Challenge Response” tab at the top of the window. Then configure slot 2:
 
@@ -207,11 +215,7 @@ section has logging enabled, and the “Yubico Output” selected.
 
 ![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico.jpg "YubiKey Personalization Tool")
 
-You must configure both the Yubikeys with the Challenge-Response mode now.
-
-## Install Yubikey Personalization Tools
-Install the latest version of the YubiKey Personalization Tool from the App Store
-https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
+You must configure both the YubiKeys with the Challenge-Response mode now.
 
 # Install PAM Yubico
 Open a Terminal window, and run the following command:
@@ -220,7 +224,7 @@ brew install pam_yubico
 ```
 
 ## Configure PAM on your Macbook
-Open a Terminal window, and run the following command as your regular user, with firstly the Yubikey inserted.
+Open a Terminal window, and run the following command as your regular user, with firstly the YubiKey inserted.
 
 > Note: If you have secure keyboard input enabled for your terminal, this will give an error. Disable while you run the commands and reenable it.
 
@@ -230,10 +234,10 @@ chmod -R 0700 ~/.yubico
 ykpamcfg -2
 ```
 
-Your Yubikey are now setup with your Macbook and can be used. You should store the backup Yubikey somewhere safe for recovery - like in a vault in your bank ;)
+Your YubiKey are now setup with your Macbook and can be used. You should store the backup YubiKey somewhere safe for recovery - like in a vault in your bank ;)
 
-## Enable Yubikey for Auth, Sudo and Screensaver
-Before you proceed, you should verify you have the `/usr/local/lib/security/pam_yubico.so` file present on your Macbook from your ealier preparations. If you dont, you will lock your self out of your Macbook now.
+## Enable YubiKey for Auth, Sudo and Screensaver
+Before you proceed, you should verify you have the `/usr/local/lib/security/pam_yubico.so` file present on your Macbook from your earlier preparations. If you dont, you will lock your self out of your Macbook now.
 
 Edit the following files:
 
@@ -269,12 +273,12 @@ Also remember to set the screensaver to require password or it wont work anyway 
 
 ![Mac screensaver](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/screensaver.jpg "Macbook Screensaver Password")
 
-Before you alter the `sudo` and `authorization` files, you can verify everything works by enabling the screensaver first. If you cannot login from the screensaver while the Yubikey is not present, something is terrible wrong now and you should NOT continue.
+Before you alter the `sudo` and `authorization` files, you can verify everything works by enabling the screensaver first. If you cannot login from the screensaver while the YubiKey is present, something is terrible wrong now and you should NOT continue.
 
-Use the screensaver to check both the Yubikeys before you proceed.
+Use the screensaver to check both the YubiKeys before you proceed.
 
 # Enable Yubikeylockd
-Yubikeylockd is a simple daemon that locks your computer (starts the scrensaver) when you unplug the Yubikey. This is ideal for when you leave the computer and you simply just take the Yubikey out and it will simply lock automatically.
+Yubikeylockd is a simple daemon that locks your computer (starts the screensaver) when you unplug the YubiKey. This is ideal for when you leave the computer and you simply just take the YubiKey out and it will simply lock automatically.
 
 To install Yubikeylockd, open a Terminal and enter the following command:
 
@@ -324,7 +328,7 @@ with-fingerprint
 EOF
 ```
 
-And make sure GPG starts using it and language is english and we have set the right permissions on files. Do not close the Terminal after this, as you need the exported variables present in your shell.
+And make sure GPG starts using it and language is English and we have set the right permissions on files. Do not close the Terminal after this, as you need the exported variables present in your shell.
 
 ```
 export GNUPGHOME=/Volumes/RAMDisk
@@ -333,7 +337,7 @@ umask 070
 ```
 
 ## Generating the Primary Key
-Use the `same terminal session` you ran the export of GNUPGHOME in when continueing the next steps.
+Use the `same terminal session` you ran the export of GNUPGHOME in when continuing the next steps.
 
 Generate a new key with GPG, selecting RSA (sign only) and the appropriate keysize, optionally specifying an expiry:
 
@@ -705,10 +709,10 @@ After a little while, it ought to propagate to other servers.
 ### Back up everything
 Once keys are moved to hardware, they cannot be extracted again (otherwise, what would be the point?), so make sure you have made an encrypted backup before proceeding.
 
-We recommend to back up the keys to an encrypted USB device. You will need this backup incase you LOSE your Yubikey and need to create a new one
+We recommend to back up the keys to an encrypted USB device. You will need this backup in case you LOSE your YubiKey and need to create a new one
 
-# Configure Yubikey as smartcard
-Plug in your Yubikey and enter the following command in a Terminal:
+# Configure YubiKey as SmartCard
+Plug in your YubiKey and enter the following command in a Terminal:
 
 ```
 gpg --card-edit
@@ -1084,7 +1088,7 @@ ssh-add -L
 ssh-rsa AAAAB4NzaC1yc2EAAAADAQABAAACAz[...]zreOKM+HwpkHzcy9DQcVG2Nw== cardno:000605553211
 ```
 
-If you see a SSH key with the `cardno:` descriptions, you have now successfully setup a SSH key on your Yubikey.
+If you see a SSH key with the `cardno:` descriptions, you have now successfully setup a SSH key on your YubiKey.
 
 You can now copy this public key to the servers you want to use it on etc.
 
@@ -1092,7 +1096,7 @@ You can now copy this public key to the servers you want to use it on etc.
 Different information and help.
 
 ## Lose of Yubikey
-In case you should lose your Yubikey eveything is not yet over and data is not yet lost. If you have another Yubikey nearby, you can simply redeploy the secure keys to a new Yubikey.
+In case you should lose your YubiKey everything is not yet over and data is not yet lost. If you have another YubiKey nearby, you can simply redeploy the secure keys to a new YubiKey.
 
 ### Access to private SSH key
 Start by recreating the RAMDisk drive with hdutil as done when you created the keys. Next, copy back all the files from your secure backup you took, to the RAMDisk.
@@ -1134,10 +1138,10 @@ gpg-connect-agent killagent /bye
 gpg-connect-agent /bye
 ```
 
-You can verify that SSH is now able to see the private key from your keyring by issueing `ssh-add -L`
+You can verify that SSH is now able to see the private key from your keyring by issuing `ssh-add -L`
 
 ## Requiring touch to authenticate
-By default the Yubikey will perform key operations without requiring a touch from the user. To require a touch for every SSH connection, use the [Yubikey Manager](https://developers.yubico.com/yubikey-manager/) (you'll need the Admin PIN):
+By default the YubiKey will perform key operations without requiring a touch from the user. To require a touch for every SSH connection, use the [YubiKey Manager](https://developers.yubico.com/yubikey-manager/) (you'll need the Admin PIN):
 
 ```
 ykman openpgp touch aut on
@@ -1150,12 +1154,12 @@ ykman openpgp touch sig on
 ykman openpgp touch enc on
 ```
 
-The Yubikey will blink when it's waiting for the touch.
+The YubiKey will blink when it's waiting for the touch.
 
-## Change Yubikey Mode
-We also need to set the YubiKey mode to OTP/U2F/CCID. My Yubikey 4 was pr. default in this mode. See more at https://developers.yubico.com/libu2f-host/Mode_switch_YubiKey.html
+## Change YubiKey Mode
+We also need to set the YubiKey mode to OTP/U2F/CCID. My YubiKey 4 was pr. default in this mode. See more at https://developers.yubico.com/libu2f-host/Mode_switch_YubiKey.html
 
-If you prefer a GUI, install the Yubkey Neo Manager: https://developers.yubico.com/yubikey-neo-manager - works with Yubikey 4 too.
+If you prefer a GUI, install the YubiKey Neo Manager: https://developers.yubico.com/yubikey-neo-manager - works with YubiKey 4 too.
 
 # References
 * https://www.yubico.com/wp-content/uploads/2015/04/YubiKey-OSX-Login.pdf
