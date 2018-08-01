@@ -213,7 +213,7 @@ section has logging enabled, and the “Yubico Format“ selected.
   4. Make sure it the box is `unchecked` for "Require user input (button press)"
   5. Click Write Configuration
 
-![Set Yubikey options](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/yubico.jpg "YubiKey Personalization Tool")
+![Set Yubikey options](https://crewjam.com/images/YubiKey_Personalization_Tool_and_MacOS_X_Challenge-Response.png "YubiKey Personalization Tool")
 
 You must configure both the YubiKeys with the Challenge-Response mode now.
 
@@ -271,7 +271,7 @@ account    required       pam_group.so no_warn deny group=admin,wheel ruser fail
 
 Also remember to set the screensaver to require password or it wont work anyway :)
 
-![Mac screensaver](https://www.avisi.nl/assets/blog/wp-uploads/2014/03/screensaver.jpg "Macbook Screensaver Password")
+![Mac screensaver](https://i.stack.imgur.com/BwMhk.png "Macbook Screensaver Password")
 
 Before you alter the `sudo` and `authorization` files, you can verify everything works by enabling the screensaver first. If you cannot login from the screensaver while the YubiKey is present, something is terrible wrong now and you should NOT continue.
 
