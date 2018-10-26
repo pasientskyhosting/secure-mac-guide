@@ -1095,8 +1095,8 @@ You can now copy this public key to the servers you want to use it on etc.
 # Misc
 Different information and help.
 
-## Lose of Yubikey
-In case you should lose your YubiKey everything is not yet over and data is not yet lost. If you have another YubiKey nearby, you can simply redeploy the secure keys to a new YubiKey.
+## Loss of Yubikey
+In case you lose your YubiKey, everything is not yet over and data is not yet lost. If you have another YubiKey nearby, you can simply redeploy the secure keys to a new YubiKey.
 
 ### Access to private SSH key
 Start by recreating the RAMDisk drive with hdutil as done when you created the keys. Next, copy back all the files from your secure backup you took, to the RAMDisk.
