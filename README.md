@@ -98,11 +98,26 @@ brew install curl
 brew install wget
 ```
 
+### Configure your shell
+To use LibreSSL and curl installed by Homebrew, it is important to update your path. You can add the following to your shell profile. Currently we're using zsh where the file you need to alter is `~/.zshrc`
+
+Add the following to the file:
+
+```
+export PATH="/usr/local/opt/curl/bin:$PATH"
+export PATH="/usr/local/opt/libressl/bin:$PATH"
+```
+
 ## Install knot-resolver
 Knot Resolver is an application that acts as a local DNS Privacy stub resolver (using DNS-over-TLS). Knot Resolver encrypts DNS queries sent from a client machine (desktop or laptop) to a DNS Privacy resolver increasing end user privacy.
 
 ```
 brew install knot-resolver
+```
+
+You will also need some certificates so you're able to use DNS-over-TLS. To install the certificates run the following in a Terminal:
+
+```
 cd /usr/local/etc/kresd
 wget https://secure.globalsign.net/cacert/Root-R2.crt
 wget https://www.digicert.com/CACerts/DigiCertECCSecureServerCA.crt
@@ -115,16 +130,8 @@ We then need to setup Knot to use DNS-Over-TLS.
 Edit Knot Resolvers configuration file at `/usr/local/etc/kresd/config` and paste in the following content:
 
 ```
--- Config file for personal resolver.
-
 -- Listen on localhost (default)
 net = { '127.0.0.1', '::1' }
-
--- Drop root privileges
--- user('knot-resolver', 'knot-resolver')
-
--- Auto-maintain root TA
--- trust_anchors.file = 'root.keys'
 
 -- Used for choosing random DNS Provider
 require 'math'
@@ -133,20 +140,20 @@ math.randomseed(os.time())
 -- Load Useful modules
 modules = {
 	'hints > iterate', -- Load /etc/hosts and allow custom root hints
-	'stats',    -- Track internal statistics
-	'predict',  -- Prefetch expiring/frequent records
+	'stats',
+	'predict',
    'policy',
    'serve_stale < cache',
    'workarounds < iterate',
 }
 
--- Smaller cache size
+-- Cache size
 cache.size = 150 * MB
 
 -- Prefetch learning (20-minute blocks over 72 hours)
 predict.config({ window = 20, period = 72})
 
--- Random forwards DNS Queries
+-- Randomize forwards DNS Queries
 DigiCert_bundle='/usr/local/etc/kresd/DigiCertECCSecureServerCA.pem'
 GlobalSign_bundle='/usr/local/etc/kresd/GlobalSignR2CA.pem'
 
@@ -156,10 +163,14 @@ dns_providers = {
     {'1.0.0.1', hostname='cloudflare-dns.com', ca_file=DigiCert_bundle},
     {'2606:4700:4700::1111', hostname='cloudflare-dns.com', ca_file=DigiCert_bundle},
     {'2606:4700:4700::1001', hostname='cloudflare-dns.com', ca_file=DigiCert_bundle},
+  },
+  {
     {'9.9.9.9', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
     {'149.112.112.112', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
     {'2620:fe::fe', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
     {'2620:fe::9', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
+  },
+  {
     {'8.8.8.8', hostname='dns.google', ca_file=GlobalSign_bundle},
     {'8.8.4.4', hostname='dns.google', ca_file=GlobalSign_bundle},
     {'2001:4860:4860::8888', hostname='dns.google', ca_file=GlobalSign_bundle},
@@ -183,7 +194,7 @@ Enable Knot Resolver to start at boot:
 sudo brew services start knot-resolver
 ```
 
-Then enable Knot Resolver DNS for each interface
+Then enable Knot Resolver DNS for each interface on your Mac:
 
 ```
 networksetup -listallnetworkservices 2>/dev/null | grep -v '*' | while read x ; do
