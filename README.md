@@ -47,9 +47,9 @@ Enable it for the build in Terminal on Macbook:
 ![SKI Terminal](http://cdn.osxdaily.com/wp-content/uploads/2011/12/secure-keyboard-entry.jpg "Terminal enable SKI")
 
 ### iTerm2
-Enable it for iTerm which a lot of people use (highly recommended):
+Enable it for iTerm which a lot of people use (highly recommended)
 
-![SKI iTerm](https://mig5.net/sites/mig5.net/files/styles/medium/public/field/image/securekeyboard.png?itok=25YqK8AQ "iTerm enable SKI")
+(install iTerm2 in the terminal: ```brew cask install iterm2```. When you have installed Homebrew)
 
 ## Enable firewall and stealth mode
 Built-in, basic firewall which blocks incoming connections only.
@@ -274,7 +274,7 @@ brew install gnupg2 pinentry-mac coreutils
 
 ## Install YubiKey Personalization Tools
 Install the latest version of the YubiKey Personalization Tool from the App Store
-https://itunes.apple.com/us/app/yubikey-personalization-tool/id638161122?mt=12
+https://www.yubico.com/products/services-software/download/yubikey-personalization-tools/
 
 # Configure your YubiKey
 Open the YubiKey Personalization Tool from your program folder on your Macbook and insert the YubiKey in a USB port on your Mac.
