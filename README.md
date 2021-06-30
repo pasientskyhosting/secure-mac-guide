@@ -775,10 +775,16 @@ This file should be publicly shared:
 gpg --armor --export $KEYID > $HOME/pubkey.txt
 ```
 
-Optionally, it may be uploaded to a public keyserver:
+Optionally, it may be uploaded to a public keyserver (without id verification - not searchable by email address):
 
 ```
-gpg --keyserver pgp.mit.edu --send-key $KEYID
+gpg --keyserver keys.openpgp.org --send-key $KEYID
+```
+
+Optionally, it may be uploaded to a public keyserver (with id verification - searchable by email address):
+
+```
+gpg --export me@here.com | curl -T - https://keys.openpgp.org
 ```
 
 After a little while, it ought to propagate to other servers.
@@ -1057,7 +1063,7 @@ mkdir -p ~/.gnupg
 
 cat << EOF > ~/.gnupg/gpg.conf
 auto-key-locate keyserver
-keyserver hkps://hkps.pool.sks-keyservers.net
+keyserver hkps://keys.openpgp.org
 personal-cipher-preferences AES256 AES192 AES CAST5
 personal-digest-preferences SHA512 SHA384 SHA256 SHA224
 default-preference-list SHA512 SHA384 SHA256 SHA224 AES256 AES192 AES CAST5 ZLIB BZIP2 ZIP Uncompressed
