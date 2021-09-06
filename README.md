@@ -280,7 +280,7 @@ brew install gnupg2 pinentry-mac coreutils
 ```
 
 ## Install YubiKey Personalization Tools
-Install the latest version of the YubiKey Personalization Tool from the App Store
+Install the latest version of the YubiKey Personalization Tool
 https://www.yubico.com/products/services-software/download/yubikey-personalization-tools/
 
 # Configure your YubiKey
