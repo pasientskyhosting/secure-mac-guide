@@ -108,6 +108,13 @@ export PATH="/usr/local/opt/curl/bin:$PATH"
 export PATH="/usr/local/opt/libressl/bin:$PATH"
 ```
 
+Or for Mac with M1 chips
+
+```
+export PATH="/opt/homebrew/opt/curl/bin:$PATH"
+export PATH="/opt/homebrew/opt/libressl/bin:$PATH"
+```
+
 ## Install knot-resolver
 Knot Resolver is an application that acts as a local DNS Privacy stub resolver (using DNS-over-TLS). Knot Resolver encrypts DNS queries sent from a client machine (desktop or laptop) to a DNS Privacy resolver increasing end user privacy.
 
@@ -314,7 +321,7 @@ ykpamcfg -2
 Your YubiKey are now setup with your Macbook and can be used. You should store the backup YubiKey somewhere safe for recovery - like in a vault in your bank ;)
 
 ## Enable YubiKey for Auth, Sudo and Screensaver
-Before you proceed, you should verify you have the `/usr/local/lib/security/pam_yubico.so` file present on your Macbook from your earlier preparations. If you dont, you will lock your self out of your Macbook now.
+Before you proceed, you should verify you have the `/usr/local/lib/security/pam_yubico.so` or `/opt/homebrew/lib/security/pam_yubico.so` file present on your Macbook from your earlier preparations. If you dont, you will lock your self out of your Macbook now.
 
 Edit the following files:
 
@@ -332,6 +339,12 @@ Add the following to the file:
 
 ```
 auth       required       /usr/local/lib/security/pam_yubico.so mode=challenge-response
+```
+
+Or below for Mac's with M1
+
+```
+auth       required       /opt/homebrew/lib/security/pam_yubico.so mode=challenge-response
 ```
 
 Ending up with something like this
