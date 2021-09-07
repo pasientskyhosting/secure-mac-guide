@@ -73,7 +73,7 @@ The required software for this guide is:
 * PAM Yubico
 * YubiKey Personalization Tools
 * GPG 2
-* Knot-Resolver
+* dnsmasq
 * OpenSSL
 * LibreSSL
 
@@ -93,7 +93,6 @@ The version of Curl which comes with macOS uses Secure Transport for SSL/TLS val
 
 ```
 brew install openssl
-brew install libressl
 brew install curl
 brew install wget
 ```
@@ -105,102 +104,101 @@ Add the following to the file:
 
 ```
 export PATH="/usr/local/opt/curl/bin:$PATH"
-export PATH="/usr/local/opt/libressl/bin:$PATH"
 ```
 
-## Install knot-resolver
-Knot Resolver is an application that acts as a local DNS Privacy stub resolver (using DNS-over-TLS). Knot Resolver encrypts DNS queries sent from a client machine (desktop or laptop) to a DNS Privacy resolver increasing end user privacy.
+## Install dnscrypt
+DNSCrypt is a protocol that authenticates communications between a DNS client and a DNS resolver. It prevents DNS spoofing. It uses cryptographic signatures to verify that responses originate from the chosen DNS resolver and haven't been tampered with.
+
+To install DNSCrypt proxy, run the following command:
 
 ```
-brew install knot-resolver
+brew install dnscrypt-proxy
 ```
 
-You will also need some certificates so you're able to use DNS-over-TLS. To install the certificates run the following in a Terminal:
+Once installed, you need to change the listen port for the service. Edit the file `/opt/homebrew/etc/dnscrypt-proxy.toml` and change the following line:
 
 ```
-cd /usr/local/etc/kresd
-wget https://secure.globalsign.net/cacert/Root-R2.crt
-wget https://www.digicert.com/CACerts/DigiCertECCSecureServerCA.crt
-openssl x509 -inform der -in Root-R2.crt -out GlobalSignR2CA.pem
-openssl x509 -inform der -in DigiCertECCSecureServerCA.crt -out DigiCertECCSecureServerCA.pem
+listen_addresses = ['127.0.0.1:53']
 ```
 
-We then need to setup Knot to use DNS-Over-TLS.
-
-Edit Knot Resolvers configuration file at `/usr/local/etc/kresd/config` and paste in the following content:
+to
 
 ```
--- Listen on localhost (default)
-net = { '127.0.0.1', '::1' }
-
--- Used for choosing random DNS Provider
-require 'math'
-math.randomseed(os.time())
-
--- Load Useful modules
-modules = {
-	'hints > iterate', -- Load /etc/hosts and allow custom root hints
-	'stats',
-	'predict',
-   'policy',
-   'serve_stale < cache',
-   'workarounds < iterate',
-}
-
--- Cache size
-cache.size = 150 * MB
-
--- Prefetch learning (20-minute blocks over 72 hours)
-predict.config({ window = 20, period = 72})
-
--- Randomize forwards DNS Queries
-DigiCert_bundle='/usr/local/etc/kresd/DigiCertECCSecureServerCA.pem'
-GlobalSign_bundle='/usr/local/etc/kresd/GlobalSignR2CA.pem'
-
-dns_providers = {
-  {
-    {'1.1.1.1', hostname='cloudflare-dns.com', ca_file=DigiCert_bundle},
-    {'1.0.0.1', hostname='cloudflare-dns.com', ca_file=DigiCert_bundle},
-    {'2606:4700:4700::1111', hostname='cloudflare-dns.com', ca_file=DigiCert_bundle},
-    {'2606:4700:4700::1001', hostname='cloudflare-dns.com', ca_file=DigiCert_bundle},
-  },
-  {
-    {'9.9.9.9', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
-    {'149.112.112.112', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
-    {'2620:fe::fe', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
-    {'2620:fe::9', hostname='dns.quad9.net', ca_file=DigiCert_bundle},
-  },
-  {
-    {'8.8.8.8', hostname='dns.google', ca_file=GlobalSign_bundle},
-    {'8.8.4.4', hostname='dns.google', ca_file=GlobalSign_bundle},
-    {'2001:4860:4860::8888', hostname='dns.google', ca_file=GlobalSign_bundle},
-    {'2001:4860:4860::8844', hostname='dns.google', ca_file=GlobalSign_bundle},
-  }
-}
-
-tls_forwarders = {}
-for n, fwdspec in ipairs(dns_providers) do
-  table.insert(tls_forwarders, policy.TLS_FORWARD(fwdspec))
-end
-
-policy.add(function (request, query)
-  return tls_forwarders[math.random(1, #tls_forwarders)]
-end)
+listen_addresses = ['127.0.0.1:40']
 ```
 
-Enable Knot Resolver to start at boot:
+This way, dnscrypt-proxy will listen on port 40 instead, since we use dnsmasq to listen on port 53 which is the default dns port.
+
+Restart dnscrypt-proxy to make the changes take affect:
 
 ```
-sudo brew services start knot-resolver
+sudo brew services restart dnscrypt-proxy
 ```
 
-Then enable Knot Resolver DNS for each interface on your Mac:
+## Install dnsmasq
+dnsmasq (short for DNS masquerade) is a lightweight, easy to configure DNS forwarder, designed to provide DNS (and optionally DHCP and TFTP) services to a small-scale network. It can serve the names of local machines which are not in the global DNS.
+
+```
+brew install dnsmasq
+```
+
+Once installed, you'll need to change to configuration of dnsmasq. If you add dnscrypt also, the following config works. If you do not use dnscrypt, you will need to change the servers address from 127.0.0.1#40 to 1.1.1.1
+
+Alter the following file `/opt/homebrew/etc/dnsmasq.conf` and add the following content to the end of the file:
+
+```
+listen-address=127.0.0.1
+port=53
+domain-needed
+bogus-priv
+filterwin2k
+no-resolv
+no-hosts
+no-poll
+cache-size=8192
+min-cache-ttl=120
+#no-negcache
+rebind-localhost-ok
+#stop-dns-rebind
+strict-order
+proxy-dnssec
+
+local=/local/
+
+# Custom development domains
+address=/.dev/127.0.0.1
+address=/.dom/127.0.0.1
+
+# Upstream DNSCrypt
+server=127.0.0.1#40
+
+# Upstream CloudFlare
+#server=1.1.1.2
+#server=1.0.0.2
+```
+
+Restart dnsmasq to make sure changes are affected
+
+```
+sudo brew services restart dnsmasq
+```
+
+Then enable DNSMASQ for each interface on your Mac:
 
 ```
 networksetup -listallnetworkservices 2>/dev/null | grep -v '*' | while read x ; do
     networksetup -setdnsservers "$x" 127.0.0.1 ::1
 done
 ```
+
+As an alternative, you can set the dns each time you open your terminal by adding:
+
+```
+# Set dns server to dnsmasq to force local cache
+networksetup -setdnsservers "Wi-Fi" 127.0.0.1
+```
+
+to your `~/.zshrc` file - if you use ZSH.
 
 ### Block DNS queries
 You should block all connections to other DNS servers as various programs use some sort of internal DNS resolver. Chrome has this build in, lots of programs also falls back to systemd's resolver. So to make sure we always use Stubby as DNS resolver, we simply just block all DNS connections to anything but Knot Resolver:
@@ -222,7 +220,7 @@ Verify that the rule is active with:
 pfctl -v -s rules
 ```
 
-### Test Knot Resolver
+### Test dns
 A quick test can be done by using dig (or your favorite DNS tool) on the loopback address
 
 ```
