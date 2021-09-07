@@ -106,6 +106,12 @@ Add the following to the file:
 export PATH="/usr/local/opt/curl/bin:$PATH"
 ```
 
+Or for Mac with M1 chips
+
+```
+export PATH="/opt/homebrew/opt/curl/bin:$PATH"
+```
+
 ## Install dnscrypt
 DNSCrypt is a protocol that authenticates communications between a DNS client and a DNS resolver. It prevents DNS spoofing. It uses cryptographic signatures to verify that responses originate from the chosen DNS resolver and haven't been tampered with.
 
@@ -271,7 +277,8 @@ brew install gnupg2 pinentry-mac coreutils
 ```
 
 ## Install YubiKey Personalization Tools
-Install the latest version of the YubiKey Personalization Tool from the App Store
+Install the latest version of the YubiKey Personalization Tool
+
 https://www.yubico.com/products/services-software/download/yubikey-personalization-tools/
 
 # Configure your YubiKey
@@ -312,7 +319,7 @@ ykpamcfg -2
 Your YubiKey are now setup with your Macbook and can be used. You should store the backup YubiKey somewhere safe for recovery - like in a vault in your bank ;)
 
 ## Enable YubiKey for Auth, Sudo and Screensaver
-Before you proceed, you should verify you have the `/usr/local/lib/security/pam_yubico.so` file present on your Macbook from your earlier preparations. If you dont, you will lock your self out of your Macbook now.
+Before you proceed, you should verify you have the `/usr/local/lib/security/pam_yubico.so` or `/opt/homebrew/lib/security/pam_yubico.so` file present on your Macbook from your earlier preparations. If you dont, you will lock your self out of your Macbook now.
 
 Edit the following files:
 
@@ -330,6 +337,12 @@ Add the following to the file:
 
 ```
 auth       required       /usr/local/lib/security/pam_yubico.so mode=challenge-response
+```
+
+Or below for Mac's with M1
+
+```
+auth       required       /opt/homebrew/lib/security/pam_yubico.so mode=challenge-response
 ```
 
 Ending up with something like this
