@@ -34,4 +34,23 @@ gopass setup
 gopass clone git@github.com:pasientskyhosting/pass-ansible.git infrastructure
 gopass clone git@github.com:pasientskyhosting/pass-ansible-production.git infrastructure-production
 ```
+
+If you want gopass to be able to copy to clipboard in windows from wsl
+```shell
+echo 'export GOPASS_CLIPBOARD_COPY_CMD="xclip"' >> ~/.bashrc
+echo 'GOPASS_CLIPBOARD_CLEAR_CMD="xclip"' >>  ~/.bashrc
+```
+
+And create fil in your path with name xclip and make sure its executable
+```shell
+#!/bin/bash
+cat | clip.exe
+```
+
+
+And test it 
+```shell
+gopass generate --clip test
+```
+
 [Internal doc](https://github.com/pasientskyhosting/ansible-infrastructure#password-management-with-gopass)
