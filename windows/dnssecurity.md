@@ -5,7 +5,8 @@ To enable dns over https do following.
 Settings -> Network & internet -> Hardware Properties
 
 Edit DNS Settings. Change automatic to manual
-Set the dns servers manual, and change the Preferred dns encryption for each of them
+Set the dns servers manual, and change the Preferred dns encryption for each of them  
+
 
 **IPv4 Dns servers**  
 Google DNS Primary: 8.8.8.8  
@@ -24,4 +25,6 @@ Quad9 DNS Primary: 2620:fe::fe
 Quad9 DNS Secondary: 2620:fe::fe:9
 
 ex:  
-<img src="dnsssl.png" width="128"/>  
+<img src="dnsssl.png" width="128"/>    
+---  
+This options overwrites dns set per connection in WIFI.
