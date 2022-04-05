@@ -4,6 +4,6 @@ This is a practical guide to improve security in windows 11.
 
 [Enable DNS over HTTPS](dnssecurity.md)
 
-Install wsl2
+[Install wsl2](wsl2.md)
 
-Setup gpg - yubikey
+[Setup GPG - Yubikey](gpg.md)
