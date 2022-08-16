@@ -1101,6 +1101,16 @@ max-cache-ttl 10800
 EOF
 ```
 
+OR for Macs using M1 
+
+cat << EOF > ~/.gnupg/gpg-agent.conf
+enable-ssh-support
+pinentry-program /opt/homebrew/bin/pinentry-mac
+default-cache-ttl 10800
+max-cache-ttl 10800
+EOF
+```
+
 ## Import public key into your keyring
 Import it from a file:
 
