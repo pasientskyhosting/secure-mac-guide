@@ -17,27 +17,6 @@ You should also buy another YubiKey as a backup key for your computer login, bec
 Please make sure before you start this process, that your Macbook has enabled FileVault 2 disk encryption.
 Apple has an excellent guide here https://support.apple.com/en-gb/HT204837
 
-## Configure idle and hibernation
-You may wish to enforce hibernation and evict FileVault keys from memory instead of traditional sleep to memory:
-
-```
-sudo pmset -a hibernatemode 25
-sudo pmset -a destroyfvkeyonstandby 1
-```
-
-If you choose to evict FileVault keys in standby mode, you should also modify your standby and power nap settings. Otherwise, your machine may wake while in standby mode and then power off due to the absence of the FileVault key. See this [issue](https://github.com/drduh/macOS-Security-and-Privacy-Guide/issues/124) for more information. These settings can be changed with:
-
-```
-sudo pmset -a womp 0
-sudo pmset -a powernap 0
-sudo pmset -a standby 1
-sudo pmset -a tcpkeepalive 0
-sudo pmset -a ttyskeepawake 0
-sudo pmset -a standbydelay 600
-sudo pmset -a autopoweroff 1
-sudo pmset -a autopoweroffdelay 605
-```
-
 ## Enable Secure Keyboard Entry
 Command line users who wish to add an additional layer of security to their keyboarding within Terminal app can find a helpful privacy feature built into the Mac client. Whether aiming for generally increasing security, if using a public Mac, or are simply concerned about things like keyloggers or any other potentially unauthorized access to your keystrokes and character entries, you can enable this feature in the Mac OS X Terminal app to secure keyboard entry and any command line input into the terminal.
 
